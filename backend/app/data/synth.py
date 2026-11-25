@@ -213,7 +213,7 @@ def build_world() -> World:
                     break
         used_names.add(name)
         emp_mu = {"enterprise": 6.2, "system_integrator": 4.2, "reseller": 3.2, "retailer": 2.6, "sub_distributor": 3.6}[atype]
-        employees = int(max(5, g.lognormal(emp_mu, 0.8)))
+        employees = int(max(5, g.lognormal(emp_mu, 0.8))) if aid != 1 else 140
         per_emp = {"enterprise": 38000, "system_integrator": 210000, "reseller": 160000,
                    "retailer": 140000, "sub_distributor": 260000}[atype]
         spend = float(employees * per_emp * g.lognormal(0, 0.35))
@@ -280,6 +280,8 @@ def build_world() -> World:
                 i = cat_idx[c]
                 if spec.get("recurring"):
                     continue  # annuity handled below
+                if a["id"] == 1 and spec["div"] in ("HON", "FMSG"):
+                    continue  # demo partner: classic silo — big EB buyer, never touched Honeywell
                 season = 1.0
                 if c == "air_purifier" and mo in (10, 11, 12, 1) and a["region"] in ("North", "East"):
                     season = 2.6

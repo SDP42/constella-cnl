@@ -79,6 +79,13 @@ class OpportunityBuilder:
         lo, hi = self.avg_price.get(cat, 1000), self.first_median.get(cat, 1e5) * 4
         return float(np.clip(v, lo, max(lo, hi)))
 
+    @staticmethod
+    def _units(a: pd.Series) -> float:
+        """Deal scale: own headcount for end-customers, project throughput for channel partners."""
+        if a["account_type"] in ("enterprise", "retailer"):
+            return max(1.0, a["employees"] / 100)
+        return float(np.clip(a["est_annual_tech_spend"] / 6e6, 1.0, 8.0))
+
     def _vas(self, p: float, value: float, margin_pct: float, wc: float, annuity: float, ann_margin: float,
              headroom: float) -> tuple[float, bool]:
         fits = value <= headroom
@@ -154,7 +161,7 @@ class OpportunityBuilder:
                 miss_req = [c for c in missing if c["required"]] or missing
                 pr = [pmap.get(c["category"], 0.05) for c in miss_req]
                 p_sol = float(np.clip(np.mean(pr) * (1.2 + coverage) + (0.12 if intent_hit else 0), 0.02, 0.92))
-                units = max(1.0, a["employees"] / 100)
+                units = self._units(a)
                 value = sum(max(1, round(c["per100"] * units)) * self.avg_price[c["category"]] for c in missing)
                 value = min(value, a["est_annual_tech_spend"] * 0.35)
                 margin = sum(C.CATEGORIES[c["category"]]["margin"] * self.avg_price[c["category"]] for c in missing) / \
@@ -176,7 +183,7 @@ class OpportunityBuilder:
                 if annuity:
                     why.append(f"Adds {_fmt_inr(annuity)}/yr recurring ({', '.join(LABEL[x['category']] for x in s['annuity'])})")
                 acc_opps.append({
-                    "kind": "solution", "title": f"Complete a {s['name']} for {a['name']}",
+                    "kind": "solution", "title": f"{s['name']} solution for {a['name']}",
                     "categories": [c["category"] for c in missing], "solution_id": s["id"],
                     "est_value": round(value, -2), "est_margin": round(value * margin, -1), "est_annuity": round(annuity, -2),
                     "probability": round(p_sol, 3), "score": round(vas, 2), "signal_ids": [sid],
@@ -235,7 +242,7 @@ class OpportunityBuilder:
                     continue
                 qty = int(inst["qty"].sum())
                 period = C.CATEGORIES[ann]["recurring"]
-                annual = qty * self.avg_price[ann] * (12 / period)
+                annual = min(qty * self.avg_price[ann] * (12 / period), a["est_annual_tech_spend"] * 0.03)
                 if ann not in owned:
                     p = float(np.clip(pmap.get(ann, 0.25) + 0.15, 0.1, 0.85))
                     vas, fits = self._vas(p, annual, C.CATEGORIES[ann]["margin"], C.CATEGORIES[ann]["wc"], annual,
@@ -292,7 +299,15 @@ class OpportunityBuilder:
                     })
 
             acc_opps.sort(key=lambda o: -o["score"])
-            for o in acc_opps[:4]:
+            # keep a balanced ladder: at most one annuity play per account in the top list
+            picked, seen_rec = [], False
+            for o in acc_opps:
+                if o["kind"] == "recurring":
+                    if seen_rec:
+                        continue
+                    seen_rec = True
+                picked.append(o)
+            for o in picked[:4]:
                 if o["probability"] < 0.06:
                     continue
                 o["account_id"] = int(aid)
