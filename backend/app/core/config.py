@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # Synthetic world
     seed: int = 42
-    n_accounts: int = 420
+    n_accounts: int = 600
     history_months: int = 24
     # The demo clock. Everything (SLA, recency, seasonality) is computed against this.
     demo_now: datetime = datetime(2026, 11, 25, 10, 0, 0)

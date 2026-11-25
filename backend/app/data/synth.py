@@ -49,6 +49,26 @@ PERSONA_REPS = [
     ("Neha Kulkarni", "SVC", "National", "steward", "neha"),
 ]
 
+INTENT_CATS: dict[str, list[str]] = {
+    "tender": ["interactive_display", "mini_pc", "structured_cabling", "projector"],
+    "expansion": ["structured_cabling", "digital_signage", "retail_security", "commercial_monitor"],
+    "new_office": ["air_purifier", "interactive_display", "home_audio", "mini_pc"],
+    "signage": ["digital_signage", "retail_security"],
+    "gaming": ["gaming_pc", "gaming_peripherals", "commercial_monitor"],
+    "creator": ["action_camera", "memory_cards", "video_accessories"],
+}
+INTENT_BY_VERTICAL: dict[str, list[str]] = {
+    "education": ["tender", "tender", "gaming", "new_office"],
+    "government": ["tender", "expansion"],
+    "healthcare": ["expansion", "new_office", "signage"],
+    "retail": ["expansion", "signage", "creator"],
+    "bfsi": ["new_office", "expansion"],
+    "it_ites": ["new_office", "new_office", "expansion"],
+    "manufacturing": ["expansion", "new_office"],
+    "hospitality": ["signage", "gaming", "expansion"],
+    "media_creators": ["creator", "creator", "expansion"],
+}
+
 INTENT_NOTES = [
     ("tender", "Mentioned a state school tender for {n} smart classrooms closing next quarter"),
     ("expansion", "Opening {n} new branches / stores in the next two quarters"),
@@ -237,6 +257,14 @@ def build_world() -> World:
         a["_need"] = need
         a["_intents"] = [s["id"] for s in intents]
 
+        intent_events = []
+        for _ in range(int(g.poisson(0.9))):
+            key = r.choice(INTENT_BY_VERTICAL[a["vertical"]])
+            intent_events.append((r.randint(0, months - 1), key))
+        if a["id"] == 1:
+            intent_events.append((months - 1, "tender"))
+        a["_intent_events"] = intent_events
+
         owned: dict[str, date] = {}
         scale = max(1.0, a["employees"] / 100)
         # account-level engagement: some accounts are simply more active
@@ -259,10 +287,13 @@ def build_world() -> World:
                     season = 1.9
                 if c in ("instant_camera", "action_camera", "gaming_peripherals") and mo in (10, 11):
                     season = 1.6  # festive season
+                for im, key in intent_events:
+                    if im < m <= im + 5 and c in INTENT_CATS[key]:
+                        season *= 3.2
                 if c not in owned:
                     sib = len(sibling[c] & set(owned)) if owned else 0
                     home = 1.0 if spec["div"] in home_divs else 0.35  # silo effect
-                    hazard = 0.018 * need[i] * home * activity * season * (1 + 0.85 * sib)
+                    hazard = 0.026 * need[i] * home * activity * season * (1 + 0.85 * sib)
                     if r.random() < min(hazard, 0.6):
                         owned[c] = month_start
                     else:
@@ -357,22 +388,24 @@ def build_world() -> World:
 
     # ---------------------------------------------------------------- interactions
     t0 = datetime.combine(start, datetime.min.time())
+    notes_by_key = dict(INTENT_NOTES)
     for a in w.accounts:
-        n = r.randint(2, 9)
-        for _ in range(n):
+        for im, key in a["_intent_events"]:
+            ts = t0 + timedelta(days=30 * im + r.randint(0, 6), hours=r.randint(9, 19))
+            if a["id"] == 1 and key == "tender" and im == months - 1:
+                ts = settings.demo_now - timedelta(days=6)
+            if ts > settings.demo_now:
+                ts = settings.demo_now - timedelta(days=r.randint(1, 20))
+            w.interactions.append({"account_id": a["id"], "rep_id": a["owner_rep_id"],
+                                   "channel": r.choice(["whatsapp", "call", "visit", "whatsapp"]), "ts": ts,
+                                   "note": notes_by_key[key].format(n=r.choice([4, 6, 8, 12, 20, 40])),
+                                   "sentiment": 0.6})
+        for _ in range(r.randint(2, 7)):
             ts = t0 + timedelta(days=r.randint(0, months * 30 - 1), hours=r.randint(9, 19))
             if ts > settings.demo_now:
                 ts = settings.demo_now - timedelta(days=r.randint(1, 60))
-            if r.random() < 0.22 or (a["id"] == 1 and _ < 2):
-                key, tmpl = r.choice(INTENT_NOTES)
-                if a["id"] == 1:
-                    key, tmpl = INTENT_NOTES[0]
-                    ts = settings.demo_now - timedelta(days=6 + _)
-                note = tmpl.format(n=r.choice([4, 6, 8, 12, 20, 40]))
-                sentiment = 0.6
-            else:
-                key, note = None, r.choice(NEUTRAL_NOTES)
-                sentiment = -0.4 if "unhappy" in note or "comparing" in note else 0.1
+            note = r.choice(NEUTRAL_NOTES)
+            sentiment = -0.4 if "unhappy" in note or "comparing" in note else 0.1
             w.interactions.append({"account_id": a["id"], "rep_id": a["owner_rep_id"],
                                    "channel": r.choice(["whatsapp", "call", "visit", "email", "whatsapp"]),
                                    "ts": ts, "note": note, "sentiment": sentiment})
