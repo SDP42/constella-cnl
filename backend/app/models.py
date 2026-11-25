@@ -250,3 +250,42 @@ class AuditLog(SQLModel, table=True):
     status: int
     ip: str
     detail: str | None = None
+
+
+class AutomationRule(SQLModel, table=True):
+    """No-code automation: WHEN <trigger> IF <conditions> THEN <actions>."""
+
+    id: str = Field(primary_key=True)
+    name: str
+    description: str
+    trigger: str = Field(index=True)  # opp_created | sla_breach | opp_won | signal | renewal_due | daily
+    conditions: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    actions: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    enabled: bool = True
+    runs: int = 0
+    last_run: NaiveDatetime | None = None
+    hours_saved_per_run: float = 0.25
+
+
+class Outbox(SQLModel, table=True):
+    """Messages the automation layer sends (WhatsApp Business API / email / webhooks in production)."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    ts: NaiveDatetime = Field(index=True)
+    channel: str  # whatsapp | email | webhook | in_app
+    to: str
+    subject: str
+    body: str
+    status: str = "queued"  # queued | sent | failed
+    rule_id: str | None = Field(default=None, index=True)
+    opportunity_id: int | None = None
+    account_id: int | None = None
+
+
+class JobRun(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    job: str = Field(index=True)
+    started_at: NaiveDatetime
+    finished_at: NaiveDatetime | None = None
+    status: str = "ok"
+    summary: str = ""
