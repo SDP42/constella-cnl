@@ -18,7 +18,7 @@ from app.core.db import engine, init_db
 from app.data import catalog as C
 from app.data.synth import build_world
 from app.data.unify import resolve
-from app.ml.features import snapshot
+from app.ml.features import FEATURES, snapshot
 from app.ml.model import train_and_evaluate
 from app.ml.opportunities import OpportunityBuilder
 from app.models import (
@@ -79,8 +79,10 @@ def build(verbose: bool = True) -> dict[str, Any]:
         log(f"model AUC={model.metrics['models']['constella_gbm']['auc']} "
             f"P@5={model.metrics['models']['constella_gbm']['precision@5']}")
 
-        live, _ = snapshot(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
-                           settings.eval_window_days, with_labels=False)
+        live, ctx = snapshot(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
+                             settings.eval_window_days, with_labels=False)
+        live["p"] = model.clf.predict_proba(live[FEATURES])[:, 1]
+        state.live, state.cooc = live, ctx
         b = OpportunityBuilder(model, f["accounts"], f["products"], f["tx"], f["assets"], f["interactions"],
                                settings.demo_now)
         b.build(live)
@@ -95,6 +97,22 @@ def build(verbose: bool = True) -> dict[str, Any]:
         s.commit()
     log(f"done in {time.time() - t0:.1f}s")
     return {"accounts": len(w.accounts), "opportunities": len(b.opps), "signals": len(b.signals)}
+
+
+def warm(verbose: bool = True) -> None:
+    """Re-hydrate in-memory model + live scores from an existing database (no data regeneration)."""
+    with Session(engine) as s:
+        f = frames(s)
+        model, _ = train_and_evaluate(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
+                                      settings.eval_window_days, settings.top_k)
+        live, ctx = snapshot(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
+                             settings.eval_window_days, with_labels=False)
+        live["p"] = model.clf.predict_proba(live[FEATURES])[:, 1]
+        run = s.exec(select(ModelRun).order_by(ModelRun.id.desc())).first()
+        state.model, state.metrics, state.live, state.cooc = model, model.metrics, live, ctx
+        state.resolution = (run.metrics or {}).get("resolution", {}) if run else {}
+    if verbose:
+        print("[constella] warmed model from existing database")
 
 
 def _event(s: Session, oid: int, ts: datetime, actor: str, kind: str, detail: str, **meta: Any) -> None:

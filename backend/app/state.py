@@ -16,6 +16,8 @@ class AppState:
         self.model: Any = None
         self.metrics: dict[str, Any] = {}
         self.resolution: dict[str, Any] = {}
+        self.live: Any = None  # live whitespace snapshot (pandas) scored by the model
+        self.cooc: Any = None  # co-purchase matrices (cos, lift, conf)
 
     @property
     def now(self) -> datetime:
