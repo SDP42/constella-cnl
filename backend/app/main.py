@@ -13,7 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-from app.api import accounts, automation, opportunities, platform
+from app.api import accounts, agent, automation, opportunities, platform
 from app.core.config import get_settings
 from app.core.db import engine, init_db
 from app.core.security import SECURITY_HEADERS, limiter
@@ -78,6 +78,7 @@ app.include_router(platform.router)
 app.include_router(opportunities.router)
 app.include_router(accounts.router)
 app.include_router(automation.router)
+app.include_router(agent.router)
 
 
 @app.get("/api/health", tags=["platform"])
