@@ -8,10 +8,11 @@ Every account carries four families of data, as asked in PS1 step 1:
 Raw per-division records (SourceRecord) are resolved into one golden Account.
 """
 
-from datetime import date, datetime
+from datetime import date
 from enum import StrEnum
 from typing import Any
 
+from pydantic import NaiveDatetime
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
 
@@ -173,7 +174,7 @@ class Interaction(SQLModel, table=True):
     account_id: int = Field(foreign_key="account.id", index=True)
     rep_id: int | None = None
     channel: str  # call | whatsapp | visit | email
-    ts: datetime
+    ts: NaiveDatetime
     note: str
     sentiment: float = 0.0
 
@@ -189,7 +190,7 @@ class Signal(SQLModel, table=True):
     strength: float
     payload: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     source: str
-    created_at: datetime
+    created_at: NaiveDatetime
 
 
 class Opportunity(SQLModel, table=True):
@@ -211,20 +212,20 @@ class Opportunity(SQLModel, table=True):
     lead_rep_id: int | None = Field(default=None, foreign_key="salesrep.id", index=True)
     lead_division: str | None = None
     assists: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
-    created_at: datetime
-    assigned_at: datetime | None = None
-    accepted_at: datetime | None = None
-    due_by: datetime | None = None
+    created_at: NaiveDatetime
+    assigned_at: NaiveDatetime | None = None
+    accepted_at: NaiveDatetime | None = None
+    due_by: NaiveDatetime | None = None
     escalation_level: int = 0
     closed_value: float | None = None
-    closed_at: datetime | None = None
+    closed_at: NaiveDatetime | None = None
     in_holdout: bool = False
 
 
 class OpportunityEvent(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     opportunity_id: int = Field(foreign_key="opportunity.id", index=True)
-    ts: datetime
+    ts: NaiveDatetime
     actor: str
     kind: str
     detail: str
@@ -233,5 +234,5 @@ class OpportunityEvent(SQLModel, table=True):
 
 class ModelRun(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime
+    created_at: NaiveDatetime
     metrics: dict[str, Any] = Field(sa_column=Column(JSON))
