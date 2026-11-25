@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="CONSTELLA_", env_file=".env", extra="ignore")
 
     app_name: str = "Constella API"
+    # Override in production: CONSTELLA_SECRET_KEY. The default is for the local demo only.
+    secret_key: str = "constella-local-demo-secret-change-me"
+    rate_limit_per_min: int = 240
+    login_rate_limit_per_min: int = 12
+    rebuild_on_start: bool = False
     database_url: str = f"sqlite:///{BASE_DIR / 'data' / 'constella.db'}"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

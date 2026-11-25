@@ -236,3 +236,17 @@ class ModelRun(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: NaiveDatetime
     metrics: dict[str, Any] = Field(sa_column=Column(JSON))
+
+
+class AuditLog(SQLModel, table=True):
+    """Append-only trail of every mutating call and every sensitive read."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    ts: NaiveDatetime = Field(index=True)
+    actor: str
+    role: str
+    method: str
+    path: str
+    status: int
+    ip: str
+    detail: str | None = None
