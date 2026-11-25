@@ -105,6 +105,11 @@ def apply_action(s: Session, opp: Opportunity, action: str, actor: str, value: f
         msg = f"Lost — {note or 'no reason'}"
     add_event(s, opp, actor, action, msg + (f" · {note}" if note and action not in ("lose", "decline") else ""))
     s.add(opp)
+    if action == "win":
+        from app.services import automation
+
+        ann = next((C.ANNUITY_FOR[c] for c in opp.categories if c in C.ANNUITY_FOR), None)
+        automation.fire(s, "opp_won", opp, annuity_category=ann)
     s.commit()
     s.refresh(opp)
     return opp
@@ -142,6 +147,9 @@ def sla_sweep(s: Session) -> list[dict[str, Any]]:
         o.escalation_level = lvl
         add_event(s, o, "SLA bot", "escalated" if lvl < 4 else "nurture", detail, level=lvl)
         s.add(o)
+        from app.services import automation
+
+        automation.fire(s, "sla_breach", o, level=lvl)
         events.append({"opportunity_id": o.id, "title": o.title, "level": lvl, "detail": detail})
     s.commit()
     return events

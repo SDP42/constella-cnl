@@ -95,6 +95,20 @@ def build(verbose: bool = True) -> dict[str, Any]:
         router = Router(w.reps, accounts)
         simulate_lifecycle(s, b.opps, router, accounts)
         s.commit()
+        from app.services import automation
+
+        automation.seed_rules(s)
+        fresh = s.exec(select(Opportunity).where(Opportunity.created_at > settings.demo_now - timedelta(days=3),
+                                                 Opportunity.in_holdout == False)).all()  # noqa: E712
+        for o in fresh:
+            automation.fire(s, "opp_created", o)
+        for o in s.exec(select(Opportunity).where(Opportunity.escalation_level > 0)).all()[:120]:
+            automation.fire(s, "sla_breach", o, level=o.escalation_level)
+        s.commit()
+        automation.renewal_job(s)
+        automation.daily_brief_job(s)
+        automation.drain_outbox(s)
+        log("automation rules seeded and first runs executed")
     log(f"done in {time.time() - t0:.1f}s")
     return {"accounts": len(w.accounts), "opportunities": len(b.opps), "signals": len(b.signals)}
 

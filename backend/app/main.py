@@ -13,7 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-from app.api import accounts, opportunities, platform
+from app.api import accounts, automation, opportunities, platform
 from app.core.config import get_settings
 from app.core.db import engine, init_db
 from app.core.security import SECURITY_HEADERS, limiter
@@ -33,7 +33,13 @@ async def lifespan(_: FastAPI):
     else:
         init_db()
         await asyncio.to_thread(pipeline.warm)
+    from app.services import scheduler
+
+    stop = asyncio.Event()
+    task = asyncio.create_task(scheduler.loop(stop))
     yield
+    stop.set()
+    await task
 
 
 app = FastAPI(
@@ -71,6 +77,7 @@ async def guard(request: Request, call_next):
 app.include_router(platform.router)
 app.include_router(opportunities.router)
 app.include_router(accounts.router)
+app.include_router(automation.router)
 
 
 @app.get("/api/health", tags=["platform"])

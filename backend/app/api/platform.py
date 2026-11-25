@@ -270,6 +270,11 @@ def capture(body: CaptureIn, s: Session = Depends(get_session), p: Principal = D
     s.add(sig)
     s.flush()
     result["signal"] = sig.model_dump()
+    from app.services import automation
+
+    if parsed["competitor"]:
+        automation.fire(s, "signal", competitor=parsed["competitor"], account_id=acc.id,
+                        message=f"{acc.name}: {parsed['competitor'].title()} also quoted — price-match approval requested by {p.name}")
     cats = [c["category"] for c in parsed["categories"] if not C.CATEGORIES[c["category"]].get("recurring")][:5]
     # overlap rule: merge into an open opportunity that shares a category
     existing = [o for o in s.exec(select(Opportunity).where(Opportunity.account_id == acc.id)).all()
@@ -312,6 +317,7 @@ def capture(body: CaptureIn, s: Session = Depends(get_session), p: Principal = D
     ops.add_event(s, o, "Constella", "detected", f"Opportunity created from whisper capture by {p.name}")
     lead = reps.get(o.lead_rep_id)
     ops.add_event(s, o, "Router", "assigned", f"Assigned to {lead.name if lead else '—'} ({o.lead_division})")
+    result["automations"] = automation.fire(s, "opp_created", o)
     s.commit()
     s.refresh(o)
     result["opportunity"] = ops.serialize(o, acc, reps)
