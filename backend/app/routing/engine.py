@@ -83,10 +83,21 @@ class Router:
         if owner and owner["division_code"] == div and self.load[owner["id"]] < owner["capacity"]:
             lead, why_rep = owner, "Account owner"
         elif div == "SVC" and self.svc_desk:
-            lead, why_rep = self._least_loaded(self._field_reps("SVC", acc["region"])) or self.svc_desk, "Annuity desk"
+            desks = [r for r in self.reps.values() if r["division_code"] == "SVC" and r["role"] == "rep"]
+            lead, why_rep = self._least_loaded(desks) or self.svc_desk, "Annuity desk (automation-assisted)"
         else:
             lead = self._least_loaded(self._field_reps(div, acc["region"]))
             why_rep = "Same-region rep with most spare capacity"
+        if lead and self.load[lead["id"]] >= lead["capacity"]:
+            # capacity overflow: borrow the least-loaded rep of the division nationally (no new headcount)
+            national = [r for r in self.reps.values() if r["division_code"] == div and r["role"] == "rep"]
+            alt = self._least_loaded(national)
+            if alt and self.load[alt["id"]] < alt["capacity"]:
+                lead, why_rep = alt, "Capacity overflow — borrowed from another region"
+            else:
+                desks = [r for r in self.reps.values() if r["division_code"] == "SVC" and r["role"] == "rep"]
+                lead = self._least_loaded(desks) or lead
+                why_rep = "All field reps at capacity — digital desk handles first touch"
         assists: list[dict[str, Any]] = []
         if owner and lead and owner["id"] != lead["id"]:
             assists.append({"rep_id": owner["id"], "division": owner["division_code"], "role": "relationship"})

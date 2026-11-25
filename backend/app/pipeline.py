@@ -186,11 +186,15 @@ def simulate_lifecycle(s: Session, opps: list[dict[str, Any]], router: Router, a
                         continue
             if not acts:
                 opp.due_by = t + timedelta(hours=24)
+                if opp.due_by < now and r.random() < 0.8:
+                    opp.due_by = now + timedelta(hours=r.uniform(3, 46))
                 continue
         actor = reps[opp.lead_rep_id]["name"] if opp.lead_rep_id else "Rep"
         t = t + timedelta(hours=r.uniform(2, 40))
         opp.status, opp.accepted_at = OppStatus.ACCEPTED, t
         opp.due_by = sla_due(t, accepted=True)
+        if opp.due_by < now and r.random() < 0.85:
+            opp.due_by = now + timedelta(hours=r.uniform(6, 110))
         _event(s, opp.id, t, actor, "accepted", "Accepted the opportunity")
         stages = [(OppStatus.CONTACTED, "Contacted partner — pitch sent on WhatsApp", 0.8),
                   (OppStatus.PROPOSAL, "Proposal shared (single combined BOM)", 0.7),
@@ -204,6 +208,9 @@ def simulate_lifecycle(s: Session, opps: list[dict[str, Any]], router: Router, a
             if t > now:
                 break
             opp.status = st
+            opp.due_by = t + timedelta(days=7)
+            if opp.due_by < now and r.random() < 0.85:
+                opp.due_by = now + timedelta(hours=r.uniform(12, 150))
             _event(s, opp.id, t, actor, st.value, msg)
         if not alive:
             opp.status = OppStatus.LOST

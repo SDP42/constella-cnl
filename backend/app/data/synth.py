@@ -146,7 +146,7 @@ def build_world() -> World:
                 nm = f"{r.choice(C.FIRST_NAMES)} {r.choice(C.LAST_NAMES)}"
                 w.reps.append({"id": rid, "name": nm, "email": f"rep{rid}@creativenewtech.demo",
                                "division_code": div, "region": region, "role": "rep", "persona_key": None,
-                               "capacity": r.randint(18, 32), "avatar_hue": r.randint(0, 360)})
+                               "capacity": 160 if div == "SVC" else r.randint(22, 34), "avatar_hue": r.randint(0, 360)})
                 rid += 1
 
     def reps_for(div: str, region: str) -> list[dict]:
