@@ -9,6 +9,7 @@ from sqlmodel import Session, col, select
 
 from app.api.schemas import ActionIn
 from app.core.db import get_session
+from app.core.security import Principal, can_see_account, current_principal
 from app.data import catalog as C
 from app.models import OPEN_STATUSES, Account, Opportunity, OpportunityEvent, OppKind, OppStatus, SalesRep, Signal
 from app.services import ops
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/api", tags=["opportunities"])
 
 @router.get("/opportunities")
 def list_opportunities(
-    s: Session = Depends(get_session),
+    s: Session = Depends(get_session), p: Principal = Depends(current_principal),
     status: str | None = None, kind: str | None = None, division: str | None = None,
     rep_id: int | None = None, account_id: int | None = None, open_only: bool = False,
     include_holdout: bool = False, sort: str = "score", limit: int = Query(100, le=1000), offset: int = 0,
@@ -45,14 +46,24 @@ def list_opportunities(
     rows = sorted(rows, key=key)
     reps = ops.rep_map(s)
     accs = {a.id: a for a in s.exec(select(Account)).all()}
+    if not p.can("read:all"):
+        rows = [o for o in rows if _visible(p, o, accs.get(o.account_id))]
     return {"total": len(rows), "items": [ops.serialize(o, accs.get(o.account_id), reps) for o in rows[offset:offset + limit]]}
 
 
+def _visible(p: Principal, o: Opportunity, acc: Account | None) -> bool:
+    involved = {o.lead_rep_id} | {a.get("rep_id") for a in (o.assists or [])}
+    return acc is not None and can_see_account(p, acc, {x for x in involved if x})
+
+
 @router.get("/opportunities/{oid}")
-def get_opportunity(oid: int, s: Session = Depends(get_session)) -> dict[str, Any]:
+def get_opportunity(oid: int, s: Session = Depends(get_session),
+                    p: Principal = Depends(current_principal)) -> dict[str, Any]:
     o = s.get(Opportunity, oid)
     if not o:
         raise HTTPException(404, "opportunity not found")
+    if not _visible(p, o, s.get(Account, o.account_id)):
+        raise HTTPException(403, "outside your territory")
     reps = ops.rep_map(s)
     acc = s.get(Account, o.account_id)
     d = ops.serialize(o, acc, reps, full=True)
@@ -68,23 +79,26 @@ def get_opportunity(oid: int, s: Session = Depends(get_session)) -> dict[str, An
 
 
 @router.post("/opportunities/{oid}/action")
-def act(oid: int, body: ActionIn, s: Session = Depends(get_session)) -> dict[str, Any]:
+def act(oid: int, body: ActionIn, s: Session = Depends(get_session),
+        p: Principal = Depends(current_principal)) -> dict[str, Any]:
     o = s.get(Opportunity, oid)
     if not o:
         raise HTTPException(404, "opportunity not found")
-    actor = "Rep"
-    if body.actor_rep_id:
-        r = s.get(SalesRep, body.actor_rep_id)
-        actor = r.name if r else actor
+    allowed = (p.can("act:any") or (p.can("act:own") and o.lead_rep_id == p.rep_id)
+               or (p.can("act:solution") and o.kind == OppKind.SOLUTION))
+    if not allowed:
+        raise HTTPException(403, "only the lead rep, the solutions desk or the sales head can act on this")
+    actor = p.name
     try:
         o = ops.apply_action(s, o, body.action, actor, body.value, body.note)
     except ValueError as e:
         raise HTTPException(409, str(e)) from e
-    return get_opportunity(o.id, s)
+    return get_opportunity(o.id, s, p)
 
 
 @router.get("/opportunities/{oid}/shape")
-def shape_deal(oid: int, s: Session = Depends(get_session)) -> dict[str, Any]:
+def shape_deal(oid: int, s: Session = Depends(get_session),
+               p: Principal = Depends(current_principal)) -> dict[str, Any]:
     o = s.get(Opportunity, oid)
     if not o:
         raise HTTPException(404, "opportunity not found")
@@ -96,7 +110,7 @@ def shape_deal(oid: int, s: Session = Depends(get_session)) -> dict[str, Any]:
 
 
 @router.get("/reps")
-def list_reps(s: Session = Depends(get_session)) -> list[dict[str, Any]]:
+def list_reps(s: Session = Depends(get_session), _: Principal = Depends(current_principal)) -> list[dict[str, Any]]:
     reps = s.exec(select(SalesRep)).all()
     opps = s.exec(select(Opportunity).where(col(Opportunity.status).in_(list(OPEN_STATUSES)))).all()
     load: dict[int, int] = {}
@@ -108,7 +122,9 @@ def list_reps(s: Session = Depends(get_session)) -> list[dict[str, Any]]:
 
 
 @router.get("/reps/{rep_id}/inbox")
-def inbox(rep_id: int, s: Session = Depends(get_session)) -> dict[str, Any]:
+def inbox(rep_id: int, s: Session = Depends(get_session), p: Principal = Depends(current_principal)) -> dict[str, Any]:
+    if not p.can("read:all") and p.rep_id != rep_id:
+        raise HTTPException(403, "you can only open your own inbox")
     rep = s.get(SalesRep, rep_id)
     if not rep:
         raise HTTPException(404, "rep not found")
