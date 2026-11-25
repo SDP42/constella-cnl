@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/unbounded";
+@import "@fontsource-variable/playfair-display";
+@import "@fontsource-variable/playfair-display/wght-italic.css";
 @import "@fontsource-variable/inter-tight";
 @import "@fontsource-variable/jetbrains-mono";
 
@@ -9,21 +10,25 @@
 
 @theme inline {
   --font-sans: 'Inter Tight Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Unbounded Variable', var(--font-sans);
-  --font-display: 'Unbounded Variable', var(--font-sans);
+  --font-heading: 'Playfair Display Variable', Georgia, serif;
+  --font-display: 'Playfair Display Variable', Georgia, serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  /* Constella brand: CNL gold + division hues */
-  --color-gold: #f5b700;
-  --color-gold-soft: #ffd75e;
-  --color-ion: #38bdf8;
-  --color-plasma: #f472b6;
-  --color-nebula: #a78bfa;
-  --color-signal: #22c55e;
-  --color-flare: #fb7185;
-  --color-void: #05060a;
-  --color-ink: #0b0d14;
-  --color-panel: #10131d;
+  /* Constella "Celestial Atlas" — see design-system/constella/MASTER.md */
+  --color-paper: #f3ecdf;
+  --color-paper-2: #eae0cc;
+  --color-vellum: #fbf7ef;
+  --color-ink: #17140f;
+  --color-ink-soft: #5a5045;
+  --color-gold: #c98a00;
+  --color-gold-bright: #f5b700;
+  --color-rust: #b4432a;
+  --color-verdigris: #2e7d5b;
+  --color-div-eb: #2b5d8c;
+  --color-div-hon: #c98a00;
+  --color-div-fmsg: #a8326e;
+  --color-div-fmct: #5b4a9e;
+  --color-div-svc: #2e7d5b;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -76,41 +81,39 @@
   }
 }
 
-/* Dark-first: Constella is a "mission control" product */
-:root,
-.dark {
-  --background: oklch(0.13 0.012 270);
-  --foreground: oklch(0.97 0.005 260);
-  --card: oklch(0.17 0.015 270);
-  --card-foreground: oklch(0.97 0.005 260);
-  --popover: oklch(0.17 0.015 270);
-  --popover-foreground: oklch(0.97 0.005 260);
-  --primary: oklch(0.82 0.17 85);
-  --primary-foreground: oklch(0.18 0.02 270);
-  --secondary: oklch(0.22 0.015 270);
-  --secondary-foreground: oklch(0.95 0.005 260);
-  --muted: oklch(0.22 0.015 270);
-  --muted-foreground: oklch(0.72 0.02 265);
-  --accent: oklch(0.25 0.02 270);
-  --accent-foreground: oklch(0.97 0.005 260);
-  --destructive: oklch(0.68 0.2 22);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.82 0.17 85);
-  --chart-1: #f5b700;
-  --chart-2: #38bdf8;
-  --chart-3: #f472b6;
-  --chart-4: #a78bfa;
-  --chart-5: #22c55e;
-  --radius: 0.85rem;
-  --sidebar: oklch(0.15 0.014 270);
-  --sidebar-foreground: oklch(0.95 0.005 260);
-  --sidebar-primary: oklch(0.82 0.17 85);
-  --sidebar-primary-foreground: oklch(0.18 0.02 270);
-  --sidebar-accent: oklch(0.22 0.015 270);
-  --sidebar-accent-foreground: oklch(0.97 0.005 260);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.82 0.17 85);
+:root {
+  --background: #f3ecdf;
+  --foreground: #17140f;
+  --card: #fbf7ef;
+  --card-foreground: #17140f;
+  --popover: #fbf7ef;
+  --popover-foreground: #17140f;
+  --primary: #17140f;
+  --primary-foreground: #fbf7ef;
+  --secondary: #eae0cc;
+  --secondary-foreground: #17140f;
+  --muted: #eae0cc;
+  --muted-foreground: #5a5045;
+  --accent: #efe3c4;
+  --accent-foreground: #17140f;
+  --destructive: #b4432a;
+  --border: rgb(23 20 15 / 0.13);
+  --input: rgb(23 20 15 / 0.18);
+  --ring: #c98a00;
+  --chart-1: #c98a00;
+  --chart-2: #2b5d8c;
+  --chart-3: #a8326e;
+  --chart-4: #5b4a9e;
+  --chart-5: #2e7d5b;
+  --radius: 0.5rem;
+  --sidebar: #eee5d3;
+  --sidebar-foreground: #17140f;
+  --sidebar-primary: #17140f;
+  --sidebar-primary-foreground: #fbf7ef;
+  --sidebar-accent: #e4d8bf;
+  --sidebar-accent-foreground: #17140f;
+  --sidebar-border: rgb(23 20 15 / 0.12);
+  --sidebar-ring: #c98a00;
 }
 
 @layer base {
@@ -119,14 +122,14 @@
   }
   html {
     @apply font-sans antialiased;
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     @apply bg-background text-foreground;
     min-height: 100dvh;
   }
   ::selection {
-    background: #f5b70055;
+    background: #f5b70066;
   }
   :focus-visible {
     outline: 2px solid var(--color-gold);
@@ -138,26 +141,50 @@
 }
 
 @layer utilities {
-  .glass {
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02));
-    border: 1px solid rgb(255 255 255 / 0.08);
-    backdrop-filter: blur(18px) saturate(140%);
-  }
-  .grid-bg {
+  /* paper grain + vignette; no grid lines anywhere */
+  .paper {
+    background-color: var(--color-paper);
     background-image:
-      linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-    background-size: 56px 56px;
+      radial-gradient(120% 80% at 50% 0%, rgb(255 251 240 / 0.9), transparent 60%),
+      radial-gradient(90% 70% at 100% 100%, rgb(201 138 0 / 0.07), transparent 60%);
   }
-  .text-glow {
-    text-shadow: 0 0 24px rgb(245 183 0 / 0.45);
+  .dossier {
+    background: var(--color-vellum);
+    border: 1px solid rgb(23 20 15 / 0.12);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 18px 40px -28px rgb(60 40 10 / 0.35);
+  }
+  .caps {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .hairline {
+    border-color: rgb(23 20 15 / 0.14);
+  }
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    padding: 0.1rem 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transform: rotate(-1.5deg);
+  }
+  .ink-underline {
+    background-image: linear-gradient(transparent 62%, rgb(245 183 0 / 0.55) 62%, rgb(245 183 0 / 0.55) 92%, transparent 92%);
   }
   .noise::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.06;
+    opacity: 0.09;
+    mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
   .num {
