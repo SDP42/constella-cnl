@@ -56,9 +56,9 @@ function Room({ comps, hot, setHot }: { comps: Comp[]; hot: string | null; setHo
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[10, 8]} /><meshStandardMaterial color="#d6c7ae" roughness={0.85} /></mesh>
       <mesh position={[0, 1.5, -4]} receiveShadow><boxGeometry args={[10, 3, 0.1]} /><meshStandardMaterial color="#F7F5F1" roughness={0.95} /></mesh>
       <mesh position={[-5, 1.5, 0]} receiveShadow><boxGeometry args={[0.1, 3, 8]} /><meshStandardMaterial color="#EFEAE2" roughness={0.95} /></mesh>
-      <mesh position={[5, 1.5, 0]} receiveShadow><boxGeometry args={[0.1, 3, 8]} /><meshStandardMaterial color="#EFEAE2" roughness={0.95} /></mesh>
-      {/* window light strip on the right wall */}
-      <mesh position={[4.94, 1.8, 1.2]} rotation={[0, -Math.PI / 2, 0]}><planeGeometry args={[3.2, 1.2]} /><meshStandardMaterial color="#cfe3f5" emissive="#cfe3f5" emissiveIntensity={0.6} /></mesh>
+      <mesh position={[5, 0.06, 0]} receiveShadow><boxGeometry args={[0.1, 0.12, 8]} /><meshStandardMaterial color="#cbbfae" /></mesh>
+      {/* window on the left wall */}
+      <mesh position={[-4.94, 1.8, 1.2]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[3.2, 1.2]} /><meshStandardMaterial color="#cfe3f5" emissive="#cfe3f5" emissiveIntensity={0.6} /></mesh>
       {desks.map(([x, z], i) => (
         <group key={i} position={[x, 0, z]}>
           <RoundedBox args={[1.4, 0.05, 0.6]} radius={0.02} position={[0, 0.74, 0]} castShadow receiveShadow><meshStandardMaterial color="#a68a64" roughness={0.6} /></RoundedBox>
