@@ -20,7 +20,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
-      <Toaster position="bottom-right" toastOptions={{ className: 'border-2 border-ink rounded-none shadow-[4px_4px_0_0_#121212]' }} />
+      <Toaster position="bottom-right" toastOptions={{ className: "pane !rounded-2xl" }} />
     </QueryClientProvider>
   )
 }

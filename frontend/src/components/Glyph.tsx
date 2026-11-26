@@ -1,29 +1,27 @@
-/** Division glyphs — the five Bauhaus primitives used as icons everywhere (MASTER.md). */
+/** Division mark — a small glass orb in the division's spectrum colour (MASTER v3). */
 export type DivCode = 'EB' | 'HON' | 'FMSG' | 'FMCT' | 'SVC'
 
 export const DIV_HEX: Record<DivCode, string> = {
-  EB: '#1040c0', HON: '#f5b700', FMSG: '#d02020', FMCT: '#121212', SVC: '#1e8f4e',
+  EB: '#3b6bff', HON: '#f5b700', FMSG: '#ff4d6d', FMCT: '#8b5cf6', SVC: '#10b981',
 }
 export const DIV_LABEL: Record<DivCode, string> = {
-  EB: 'Enterprise Business', HON: 'Honeywell Licensing', FMSG: 'Social-Media Gadgets', FMCT: 'Consumer Tech', SVC: 'Services & Annuity',
+  EB: 'Enterprise Business', HON: 'Licensed & Own Brands', FMSG: 'Gadgets & Drones', FMCT: 'Consumer & AI Tech', SVC: 'Services & Annuity',
 }
 
-export function Glyph({ div, size = 16, className, title }: { div: DivCode | string; size?: number; className?: string; title?: string }) {
-  const c = DIV_HEX[div as DivCode] ?? '#121212'
-  const s = size
+export function Glyph({ div, size = 14, className, title }: { div: DivCode | string; size?: number; className?: string; title?: string }) {
+  const c = DIV_HEX[div as DivCode] ?? '#5b6275'
   return (
-    <svg width={s} height={s} viewBox="0 0 20 20" className={className} role={title ? 'img' : undefined}
-      aria-label={title} aria-hidden={title ? undefined : true}>
-      {div === 'EB' && <rect x="2" y="2" width="16" height="16" fill={c} stroke="#121212" strokeWidth="1.5" />}
-      {div === 'HON' && <circle cx="10" cy="10" r="8" fill={c} stroke="#121212" strokeWidth="1.5" />}
-      {div === 'FMSG' && <polygon points="10,2 18.5,18 1.5,18" fill={c} stroke="#121212" strokeWidth="1.5" strokeLinejoin="round" />}
-      {div === 'FMCT' && <rect x="4" y="1.5" width="12" height="17" rx="6" fill={c} stroke="#121212" strokeWidth="1.5" />}
-      {div === 'SVC' && <circle cx="10" cy="10" r="7" fill="none" stroke={c} strokeWidth="4" />}
-    </svg>
+    <span role={title ? 'img' : undefined} aria-label={title} aria-hidden={title ? undefined : true}
+      className={`inline-block shrink-0 rounded-full ${className ?? ''}`}
+      style={{
+        width: size, height: size,
+        background: `radial-gradient(circle at 32% 28%, #ffffffee 0 14%, ${c}cc 38%, ${c} 70%)`,
+        boxShadow: `0 0 0 1px #ffffffaa inset, 0 ${size / 6}px ${size / 2}px -${size / 6}px ${c}88`,
+      }} />
   )
 }
 
-export function GlyphRow({ size = 14, gap = 4 }: { size?: number; gap?: number }) {
+export function GlyphRow({ size = 10, gap = 4 }: { size?: number; gap?: number }) {
   return (
     <span className="inline-flex items-center" style={{ gap }}>
       {(['EB', 'HON', 'FMSG', 'FMCT', 'SVC'] as DivCode[]).map((d) => <Glyph key={d} div={d} size={size} />)}
