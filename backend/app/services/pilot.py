@@ -9,7 +9,7 @@ Design
     anyway" is netted out by the control group.
 
 Projection (until real pilot data exists)
-  natural conversion in 6 months:  q = 1 - (1 - p)^(180/120)           (model probability, calibrated)
+  natural conversion in 6 months:  q = 1 - (1 - p)^(180/120)           (isotonic-calibrated model probability)
   treated conversion:              q' = q + action_rate * (1 - q) * uplift_kind * q
   run N simulations -> mean + 90% interval for every KPI, per month.
 """
@@ -21,15 +21,42 @@ from typing import Any
 import numpy as np
 
 UPLIFT = {"cross_sell": 0.9, "upsell": 0.6, "solution": 1.3, "recurring": 1.8}
+# Assumptions, not measurements — the pilot exists to replace them with observed values.
+UPLIFT_RATIONALE = {
+    "cross_sell": "Proactive outreach on a scored whitespace roughly doubles a low natural conversion rate; directional evidence: "
+                  "McKinsey reports next-best-action programmes in B2B distribution lifting bookings (mckinsey.com distribution blog).",
+    "upsell": "Smaller lift: the partner already buys the category, so the natural rate is higher and outreach adds less.",
+    "solution": "Bundling removes the coordination cost of buying from several divisions; one PO and one owner is the main lever.",
+    "recurring": "Largest lift: annuity attach is near zero today because nobody owns the offer (Avaus: hardware buyers' next-best "
+                 "offer is usually the service); a zero-touch renewal playbook reaches every installed unit.",
+}
+
+
+def _metrics(win: np.ndarray, mask: np.ndarray, acc_ids: np.ndarray, n: int, is_x, is_sol, value, margin, annuity) -> dict[str, float]:
+    w = win & mask
+    return {
+        "cross_sell_rate": len(set(acc_ids[w & is_x])) / n,
+        "solution_attach_rate": len(set(acc_ids[w & is_sol])) / n,
+        "arr_per_account": float((annuity * w).sum()) / n,
+        "gp_per_account": float((margin * w).sum() + (annuity * w * 0.4).sum()) / n,
+        "revenue_per_account": float((value * w).sum()) / n,
+    }
 
 
 def simulate(opps: list[dict[str, Any]], accounts: dict[int, dict[str, Any]], action_rate: float = 0.65,
              uplift_scale: float = 1.0, runs: int = 300, seed: int = 11) -> dict[str, Any]:
+    """Treatment vs a control-calibrated counterfactual (difference-in-differences style).
+
+    For each run the SAME random draws decide (a) what treatment partners buy with Constella (q_t) and
+    (b) what they would have bought anyway (q) — common random numbers remove group-composition noise.
+    The holdout group then measures how far reality sits from the model's natural rate (observed ÷ expected);
+    that ratio scales the counterfactual. Uplift = treatment − calibrated counterfactual.
+    """
     rng = np.random.default_rng(seed)
     if not opps:
         return {}
     p = np.array([o["probability"] for o in opps])
-    q = 1 - (1 - p) ** 1.5
+    q = 1 - (1 - p) ** 1.5  # 120-day probability → 6-month horizon
     kind = [o["kind"] for o in opps]
     up = np.array([UPLIFT[k] * uplift_scale for k in kind])
     q_t = np.clip(q + action_rate * (1 - q) * up * q, 0, 0.97)
@@ -43,25 +70,37 @@ def simulate(opps: list[dict[str, Any]], accounts: dict[int, dict[str, Any]], ac
     hold = np.array([accounts[a]["in_holdout"] for a in acc_ids])
     n_t = max(1, sum(1 for a in accounts.values() if not a["in_holdout"]))
     n_c = max(1, sum(1 for a in accounts.values() if a["in_holdout"]))
-    # month of close ~ geometric over 6 months, faster for recurring
     month_p = np.where(is_rec, 0.35, np.where(is_sol, 0.15, 0.22))
+    args = (acc_ids, None, is_x, is_sol, value, margin, annuity)
 
-    kpis = {k: {"treatment": [], "control": []} for k in
-            ("cross_sell_rate", "solution_attach_rate", "arr_per_account", "gp_per_account", "revenue_per_account")}
+    # expected natural outcome of the control group (for its observed/expected calibration ratio)
+    exp_c = {k: 0.0 for k in ("cross_sell_rate", "solution_attach_rate", "arr_per_account", "gp_per_account", "revenue_per_account")}
+    for _ in range(60):
+        m = _metrics(rng.random(len(opps)) < q, hold, acc_ids, n_c, is_x, is_sol, value, margin, annuity)
+        for k in exp_c:
+            exp_c[k] += m[k] / 60
+
+    keys = list(exp_c)
+    T = {k: [] for k in keys}
+    CF = {k: [] for k in keys}
+    UP = {k: [] for k in keys}
     monthly_t, monthly_c = np.zeros((runs, 6)), np.zeros((runs, 6))
     for i in range(runs):
         u = rng.random(len(opps))
-        # every account follows its group: control converts naturally, treatment with Constella
-        win = np.where(hold, u < q, u < q_t)
+        win_t = u < q_t          # treatment partners, worked by Constella
+        win_cf = u < q           # the same partners, had nothing changed
+        ctrl = _metrics(u < q, hold, acc_ids, n_c, is_x, is_sol, value, margin, annuity)
+        t = _metrics(win_t, ~hold, acc_ids, n_t, is_x, is_sol, value, margin, annuity)
+        cf = _metrics(win_cf, ~hold, acc_ids, n_t, is_x, is_sol, value, margin, annuity)
+        for k in keys:
+            ratio = float(np.clip(ctrl[k] / exp_c[k], 0.5, 1.5)) if exp_c[k] > 0 else 1.0
+            T[k].append(t[k])
+            CF[k].append(cf[k] * ratio)
+            UP[k].append(t[k] - cf[k] * ratio)
         months = np.minimum(5, rng.geometric(month_p) - 1)
-        for grp, mask, n, store in (("treatment", ~hold, n_t, monthly_t), ("control", hold, n_c, monthly_c)):
-            w = win & mask
-            kpis["cross_sell_rate"][grp].append(len(set(acc_ids[w & is_x])) / n)
-            kpis["solution_attach_rate"][grp].append(len(set(acc_ids[w & is_sol])) / n)
-            kpis["arr_per_account"][grp].append(float((annuity * w).sum()) / n)
-            kpis["gp_per_account"][grp].append(float((margin * w).sum() + (annuity * w * 0.4).sum()) / n)
-            kpis["revenue_per_account"][grp].append(float((value * w).sum()) / n)
-            store[i] = np.bincount(months[w], weights=(value + annuity)[w], minlength=6)[:6].cumsum() / n
+        mt, mc = win_t & ~hold, win_cf & ~hold
+        monthly_t[i] = np.bincount(months[mt], weights=(value + annuity)[mt], minlength=6)[:6].cumsum() / n_t
+        monthly_c[i] = np.bincount(months[mc], weights=(value + annuity)[mc], minlength=6)[:6].cumsum() / n_t
 
     def summ(v: list[float]) -> dict[str, float]:
         a = np.array(v)
@@ -70,14 +109,14 @@ def simulate(opps: list[dict[str, Any]], accounts: dict[int, dict[str, Any]], ac
 
     out: dict[str, Any] = {"assumptions": {"action_rate": action_rate, "uplift_scale": uplift_scale, "runs": runs,
                                            "uplift_by_kind": {k: v * uplift_scale for k, v in UPLIFT.items()},
-                                           "treatment_accounts": n_t, "control_accounts": n_c}, "kpis": {}}
-    for k, d in kpis.items():
-        t, c = summ(d["treatment"]), summ(d["control"])
-        diff = np.array(d["treatment"]) - np.array(d["control"])
-        out["kpis"][k] = {"treatment": t, "control": c,
-                          "uplift": {"mean": round(float(diff.mean()), 4), "p5": round(float(np.percentile(diff, 5)), 4),
-                                     "p95": round(float(np.percentile(diff, 95)), 4)},
-                          "uplift_pct": round(100 * float(diff.mean()) / max(1e-9, c["mean"]), 1)}
+                                           "uplift_rationale": UPLIFT_RATIONALE,
+                                           "treatment_accounts": n_t, "control_accounts": n_c,
+                                           "method": "treatment vs control-calibrated counterfactual on common random numbers"},
+                           "kpis": {}}
+    for k in keys:
+        t, c, d = summ(T[k]), summ(CF[k]), summ(UP[k])
+        out["kpis"][k] = {"treatment": t, "control": c, "uplift": d,
+                          "uplift_pct": round(100 * d["mean"] / max(1e-9, c["mean"]), 1)}
     out["monthly"] = [{"month": m + 1, "treatment": round(float(monthly_t[:, m].mean())),
                        "control": round(float(monthly_c[:, m].mean())),
                        "t_lo": round(float(np.percentile(monthly_t[:, m], 5))),
