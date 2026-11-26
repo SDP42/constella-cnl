@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { Suspense, useMemo, useRef } from 'react'
 import * as THREE from 'three'
+import { INDIA } from '@/lib/geo'
 
 /**
  * Night-side globe facing India. Scroll progress (0..1) zooms the camera from orbit to India to Pune.
@@ -12,15 +13,6 @@ import * as THREE from 'three'
 export interface GlobeCity { city: string; lat: number; lng: number; partners: { hero: boolean }[] }
 
 const R = 2
-// rough India outline (lng, lat) — enough for a dot-matrix landmass at this zoom
-const INDIA: [number, number][] = [
-  [68.4, 23.6], [69.2, 22.3], [70.5, 20.9], [72.6, 21.1], [72.8, 19.0], [73.4, 16.0], [74.1, 14.8], [74.8, 12.9], [75.6, 11.3],
-  [76.3, 9.5], [77.5, 8.1], [78.2, 8.9], [79.3, 10.3], [79.9, 12.0], [80.3, 13.6], [80.1, 15.5], [81.3, 16.4], [82.3, 17.0],
-  [84.0, 18.3], [85.5, 19.6], [87.0, 20.7], [88.1, 21.6], [89.0, 21.8], [88.7, 24.3], [88.1, 26.4], [89.8, 26.0], [92.0, 25.0],
-  [92.6, 23.6], [93.4, 24.0], [94.2, 25.8], [95.3, 26.9], [96.0, 27.6], [95.0, 28.3], [93.0, 27.9], [91.6, 27.8], [89.5, 28.0],
-  [88.1, 27.6], [86.0, 27.8], [84.1, 28.6], [81.0, 30.2], [79.0, 31.4], [78.7, 32.5], [78.9, 34.3], [77.8, 35.5], [76.0, 35.9],
-  [74.0, 34.8], [73.8, 33.6], [74.6, 32.0], [73.8, 30.0], [71.9, 28.0], [70.2, 27.4], [69.5, 26.6], [70.0, 25.0], [68.4, 23.6],
-]
 
 function inPoly(x: number, y: number, poly: [number, number][]) {
   let inside = false
