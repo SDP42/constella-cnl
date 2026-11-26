@@ -2,7 +2,7 @@
 export type DivCode = 'EB' | 'HON' | 'FMSG' | 'FMCT' | 'SVC'
 
 export const DIV_HEX: Record<DivCode, string> = {
-  EB: '#3b6bff', HON: '#f5b700', FMSG: '#ff4d6d', FMCT: '#8b5cf6', SVC: '#10b981',
+  EB: '#3e5c76', HON: '#c99a2e', FMSG: '#c2553d', FMCT: '#6b4e71', SVC: '#3f7d5c',
 }
 export const DIV_LABEL: Record<DivCode, string> = {
   EB: 'Enterprise Business', HON: 'Licensed & Own Brands', FMSG: 'Gadgets & Drones', FMCT: 'Consumer & AI Tech', SVC: 'Services & Annuity',

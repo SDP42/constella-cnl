@@ -13,16 +13,19 @@
   --font-display: 'DM Sans Variable', ui-sans-serif, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  --color-pearl: #f5f6fa;
-  --color-ink: #0e1220;
-  --color-ink-soft: #5b6275;
-  --color-spec-eb: #3b6bff;
-  --color-spec-hon: #f5b700;
-  --color-spec-fmsg: #ff4d6d;
-  --color-spec-fmct: #8b5cf6;
-  --color-spec-svc: #10b981;
-  --color-warn: #e8590c;
-  --color-danger: #e03131;
+  --color-pearl: #f7f5f1;
+  --color-ink: #1c1917;
+  --color-ink-soft: #57534e;
+  --color-spec-eb: #3e5c76;
+  --color-spec-hon: #c99a2e;
+  --color-spec-fmsg: #c2553d;
+  --color-spec-fmct: #6b4e71;
+  --color-spec-svc: #3f7d5c;
+  --color-warn: #b45309;
+  --color-gold: #a16207;
+  --color-gold-bright: #f5b700;
+  --color-night: #0c0a09;
+  --color-danger: #b42318;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -81,38 +84,38 @@
 }
 
 :root {
-  --background: #f5f6fa;
-  --foreground: #0e1220;
+  --background: #f7f5f1;
+  --foreground: #1c1917;
   --card: rgb(255 255 255 / 0.82);
-  --card-foreground: #0e1220;
+  --card-foreground: #1c1917;
   --popover: #ffffff;
-  --popover-foreground: #0e1220;
-  --primary: #0e1220;
+  --popover-foreground: #1c1917;
+  --primary: #1c1917;
   --primary-foreground: #ffffff;
-  --secondary: rgb(14 18 32 / 0.05);
-  --secondary-foreground: #0e1220;
-  --muted: rgb(14 18 32 / 0.05);
-  --muted-foreground: #5b6275;
-  --accent: rgb(59 107 255 / 0.09);
-  --accent-foreground: #0e1220;
+  --secondary: rgb(28 25 23 / 0.05);
+  --secondary-foreground: #1c1917;
+  --muted: rgb(28 25 23 / 0.05);
+  --muted-foreground: #57534e;
+  --accent: rgb(161 98 7 / 0.09);
+  --accent-foreground: #1c1917;
   --destructive: #e03131;
-  --border: rgb(14 18 32 / 0.08);
-  --input: rgb(14 18 32 / 0.12);
-  --ring: #3b6bff;
-  --chart-1: #3b6bff;
-  --chart-2: #f5b700;
-  --chart-3: #ff4d6d;
-  --chart-4: #8b5cf6;
-  --chart-5: #10b981;
+  --border: rgb(28 25 23 / 0.08);
+  --input: rgb(28 25 23 / 0.12);
+  --ring: #a16207;
+  --chart-1: #3e5c76;
+  --chart-2: #c99a2e;
+  --chart-3: #c2553d;
+  --chart-4: #6b4e71;
+  --chart-5: #3f7d5c;
   --radius: 1rem;
   --sidebar: rgb(255 255 255 / 0.5);
-  --sidebar-foreground: #0e1220;
-  --sidebar-primary: #0e1220;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #1c1917;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgb(14 18 32 / 0.05);
-  --sidebar-accent-foreground: #0e1220;
+  --sidebar-accent: rgb(28 25 23 / 0.05);
+  --sidebar-accent-foreground: #1c1917;
   --sidebar-border: rgb(255 255 255 / 0.7);
-  --sidebar-ring: #3b6bff;
+  --sidebar-ring: #a16207;
 }
 
 @layer base {
@@ -132,10 +135,10 @@
     letter-spacing: -0.035em;
   }
   ::selection {
-    background: rgb(59 107 255 / 0.22);
+    background: rgb(245 183 0 / 0.35);
   }
   :focus-visible {
-    outline: 2px solid #3b6bff;
+    outline: 2px solid #a16207;
     outline-offset: 3px;
   }
   button, a, [role='button'], summary {
@@ -150,7 +153,7 @@
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     border: 1px solid rgb(255 255 255 / 0.75);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(14 18 32 / 0.04), 0 8px 32px rgb(14 18 32 / 0.1);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(28 25 23 / 0.04), 0 8px 32px rgb(28 25 23 / 0.1);
   }
   /* iridescent hairline edge */
   .iris {
@@ -162,7 +165,7 @@
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: conic-gradient(from 210deg, #3b6bff55, #10b98155, #f5b70066, #ff4d6d55, #8b5cf655, #3b6bff55);
+    background: linear-gradient(135deg, #ffffffcc, #f5b70044 40%, #ffffff55);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -174,7 +177,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgb(255 255 255 / 0.9);
-    box-shadow: 0 1px 2px rgb(14 18 32 / 0.04), 0 12px 32px -12px rgb(14 18 32 / 0.12);
+    box-shadow: 0 1px 2px rgb(28 25 23 / 0.04), 0 12px 32px -12px rgb(28 25 23 / 0.12);
     border-radius: 20px;
   }
   .label {
@@ -189,7 +192,7 @@
     font-variant-numeric: tabular-nums;
   }
   .spectrum-text {
-    background: linear-gradient(92deg, #3b6bff 0%, #8b5cf6 28%, #ff4d6d 52%, #f5b700 76%, #10b981 100%);
+    background: linear-gradient(100deg, #f5b700 0%, #e8a33d 45%, #c2553d 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
