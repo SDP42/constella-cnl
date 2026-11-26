@@ -6,12 +6,8 @@ import { useNavigate } from 'react-router-dom'
 import { Aura } from '@/components/Aura'
 import { Glyph, GlyphRow, DIV_HEX, type DivCode } from '@/components/Glyph'
 import { AppPreview } from '@/components/landing/AppPreview'
-import { SiloMerge } from '@/components/landing/SiloMerge'
-import { Statement } from '@/components/landing/Statement'
-import { Timeline } from '@/components/landing/Timeline'
-import { WireTicker } from '@/components/landing/WireTicker'
+import { ConstellationStory } from '@/components/landing/ConstellationStory'
 import CountUp from '@/components/reactbits/CountUp'
-import SpotlightCard from '@/components/reactbits/SpotlightCard'
 import { api, login } from '@/lib/api'
 import { homeFor, type Role } from '@/lib/auth'
 import { inr } from '@/lib/format'
@@ -23,17 +19,6 @@ const CHAPTERS = [
   { k: '01 · The network', short: 'Network', t: '', d: 'CNL reaches 10,000+ channel partners across India — resellers, system integrators, retailers and enterprises — through five product divisions.', stat: 'Mumbai HQ · 31+ branches · 25+ brands' },
   { k: '02 · The routes', short: 'Routes', t: 'Every city. Every division.', d: 'Each partner buys from several divisions, but each division sees only its own slice. Constella stitches every slice into one account twin.', stat: '24 cities · 600 sample partners · 1 golden record each' },
   { k: '03 · One partner', short: 'Zoom', t: 'Zoom into Pune.', d: 'TechNova Systems buys panels and PCs — but no cabling, hubs or AMC. Constella spots the missing Smart Classroom, routes it to the right owner and drafts the pitch.', stat: 'p = 0.58 · fits credit · 70/30 split credit' },
-]
-
-const INVENTIONS: { t: string; d: string; div: DivCode; span?: string; big?: boolean }[] = [
-  { t: 'Value-at-Stake', d: 'Ranks every deal by margin × cash velocity × credit fit — CNL’s own Quadrant logic, as one number.', div: 'HON', span: 'md:col-span-2 md:row-span-2', big: true },
-  { t: 'Cost of Delay', d: 'Idle opportunities show the ₹ they lose each day as the signal decays.', div: 'FMSG' },
-  { t: 'DaaS-ify', d: 'Credit-blocked deal becomes a 36-month subscription: hardware margin now, annuity forever.', div: 'SVC' },
-  { t: 'Whisper Capture', d: 'Paste one WhatsApp line — intent, quantity, timing and competitor are extracted and routed.', div: 'EB', span: 'md:col-span-2' },
-  { t: 'Brand Bundle Lever', d: '“Want Honeywell? Stock WOZOYO.” Scarce brands unlock attach bundles automatically.', div: 'FMCT' },
-  { t: 'Split-Credit Contract', d: 'Sharing an account never costs its owner — so nobody hoards.', div: 'HON' },
-  { t: 'Agentic Copilot', d: 'LangGraph + Claude over the platform’s own tools, scoped by role, grounded in playbooks.', div: 'EB', span: 'md:col-span-2' },
-  { t: 'FY29 Path', d: 'Run-rate vs the ₹6,000 Cr goal and 40% brand mix, with live scenario sliders.', div: 'FMSG' },
 ]
 
 const SEATS: { key: string; name: string; role: Role; title: string; div: DivCode }[] = [
@@ -51,6 +36,7 @@ export default function Landing() {
   const root = useRef<HTMLDivElement>(null)
   const progress = useRef(0)
   const flightRef = useRef<HTMLElement>(null)
+  const globeWrap = useRef<HTMLDivElement>(null)
   const [chapter, setChapter] = useState(0)
   const net = useQuery({ queryKey: ['public-network'], queryFn: () => api('/api/public/network'), staleTime: 300_000 })
   const [busy, setBusy] = useState<string | null>(null)
@@ -73,6 +59,13 @@ export default function Landing() {
       const span = el.offsetHeight - innerHeight
       const p = Math.min(1, Math.max(0, (scrollY - top) / span))
       progress.current = prefersReducedMotion() ? Math.max(p, 0.7) : p
+      // exit: blur-zoom-through into the constellation
+      const out = Math.min(1, Math.max(0, (p - 0.86) / 0.14))
+      if (globeWrap.current) {
+        globeWrap.current.style.filter = `blur(${(out * 18).toFixed(1)}px)`
+        globeWrap.current.style.transform = `scale(${(1 + out * 0.35).toFixed(3)})`
+        globeWrap.current.style.opacity = String(1 - out)
+      }
       const c = p < 0.3 ? 0 : p < 0.62 ? 1 : 2
       setChapter((prev) => (prev === c ? prev : c))
     }
@@ -132,9 +125,11 @@ export default function Landing() {
       <section id="flight" ref={flightRef} className="relative h-[400vh] bg-night" aria-label="Flight through CNL's partner network">
         <div className="sticky top-0 h-dvh w-full overflow-hidden">
           {net.data && (
-            <Suspense fallback={null}>
-              <Globe cities={net.data.cities} progress={progress} className="absolute inset-0" />
-            </Suspense>
+            <div ref={globeWrap} className="absolute inset-0 will-change-[filter,transform,opacity]">
+              <Suspense fallback={null}>
+                <Globe cities={net.data.cities} progress={progress} className="absolute inset-0" />
+              </Suspense>
+            </div>
           )}
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,10,9,.9)_0%,rgba(12,10,9,.55)_34%,transparent_60%)]" />
           {/* chapters */}
@@ -186,55 +181,24 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      <Statement />
-      <div className="bg-night px-3 pb-10"><div className="mx-auto max-w-6xl"><WireTicker /></div></div>
-      <div aria-hidden className="h-40 bg-gradient-to-b from-night to-pearl" />
-
-      <SiloMerge />
-
-      {/* by the numbers — editorial strip, not cards */}
-      <section className="mx-auto max-w-6xl px-5 py-24" aria-labelledby="numbers-h">
-        <h2 id="numbers-h" className="sr-only">Creative Newtech by the numbers</h2>
-        <div className="grid grid-cols-2 gap-y-10 border-y border-ink/10 py-10 md:grid-cols-6">
-          {[
-            ['10,000+', 'channel partners'], ['5,000+', 'SKUs · 25+ brands'], ['5.31%', 'EBITDA margin, Q2 FY27'],
-            ['45 days', 'net working capital'], ['₹3,195 Cr', 'BharatNet SI order'], ['₹6,000 Cr', 'FY29 revenue goal'],
-          ].map(([v, l], i) => (
-            <div key={l} className={`reveal px-4 ${i ? 'md:border-l md:border-ink/10' : ''}`}>
-              <div className="num text-[clamp(1.4rem,2.4vw,2.1rem)] font-semibold tracking-tight">{v}</div>
-              <div className="mt-1 text-xs text-ink-soft">{l}</div>
-            </div>
-          ))}
-        </div>
-        <p className="label mt-4">Sources · CNL investor deck Q1 FY26 · Q2 FY27 earnings call, 29 Oct 2026</p>
-      </section>
+      <ConstellationStory annuity={stats.data?.annuity_value} />
 
       <AppPreview />
-      <Timeline />
 
-      {/* inventions */}
-      <section id="inventions" className="mx-auto max-w-6xl px-5 pb-32" aria-labelledby="inv-h">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <h2 id="inv-h" className="reveal text-[clamp(2.2rem,4.8vw,4rem)] font-semibold">Inventions</h2>
-          <p className="reveal max-w-md text-ink-soft">Not another lead-scoring widget — each mechanism answers a constraint CNL actually has: thin margins, credit, silos, headcount.</p>
-        </div>
-        <div className="grid auto-rows-[minmax(180px,auto)] gap-3 md:grid-cols-4">
-          {INVENTIONS.map((f, i) => (
-            <SpotlightCard key={f.t} spotlightColor={`${DIV_HEX[f.div]}30`}
-              className={`reveal pane lift !rounded-[20px] !border-white/90 !bg-white/80 !p-6 ${f.span ?? ''}`}>
-              <div className="flex h-full flex-col justify-between gap-6">
-                <div className="flex items-center justify-between">
-                  <span className="num text-xs text-ink-soft">{String(i + 1).padStart(2, '0')}</span>
-                  <Glyph div={f.div} size={f.big ? 40 : 18} />
-                </div>
-                <div>
-                  <h3 className={`font-semibold tracking-tight ${f.big ? 'text-5xl' : 'text-xl'}`}>{f.t}</h3>
-                  <p className={`mt-2 leading-relaxed text-ink-soft ${f.big ? 'max-w-sm text-lg' : 'text-sm'}`}>{f.d}</p>
-                </div>
-              </div>
-            </SpotlightCard>
-          ))}
-        </div>
+      {/* capabilities — two marquee rows moving in opposite directions (L→R / R→L), words only */}
+      <section id="inventions" className="overflow-hidden py-24" aria-label="Capabilities">
+        {[0, 1].map((row) => (
+          <div key={row} className={`flex w-max gap-12 py-3 ${row ? 'animate-[marquee_46s_linear_infinite_reverse]' : 'animate-marquee'}`}>
+            {Array.from({ length: 2 }).flatMap((_, k) =>
+              (row ? ['Deal desk', 'Credit grades', 'Annuity ledger', 'Brand portal', 'Churn radar', 'FY29 path', 'Pilot lab', 'Audit trail']
+                : ['Account twin', 'Next-best solution', 'Value-at-stake', 'Whisper capture', 'Split credit', 'DaaS-ify', 'Voice copilot', 'Zero-touch renewal']
+              ).map((w, i) => (
+                <span key={`${k}-${i}`} className="flex items-center gap-12 whitespace-nowrap text-[clamp(1.8rem,4vw,3.6rem)] font-medium tracking-[-0.03em] text-ink/85">
+                  {w}<span className="size-2 rounded-full bg-gold-bright" />
+                </span>
+              )))}
+          </div>
+        ))}
       </section>
 
       {/* proof */}
