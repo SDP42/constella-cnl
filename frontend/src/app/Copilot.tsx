@@ -114,7 +114,7 @@ export function Copilot({ open, onOpenChange }: { open: boolean; onOpenChange: (
   }
   const stopListening = () => { rec.current?.stop(); setListening(false) }
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth' }), [msgs, ask.isPending])
+  useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs, ask.isPending])
   useEffect(() => { if (!open) { rec.current?.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel() } }, [open])
 
   const orbState = listening ? 'listening' : ask.isPending ? 'thinking' : speaking ? 'speaking' : 'idle'
