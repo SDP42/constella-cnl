@@ -19,10 +19,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
+from app.data import catalog as C
 from app.ml.features import CATEGORICAL, FEATURES, snapshot
 
 FEATURE_LABELS = {
@@ -56,6 +58,18 @@ def _make_clf() -> HistGradientBoostingClassifier:
     )
 
 
+def _ece(y: np.ndarray, p: np.ndarray, bins: int = 10) -> float:
+    """Expected calibration error over equal-width probability bins."""
+    edges = np.linspace(0, 1, bins + 1)
+    idx = np.clip(np.digitize(p, edges) - 1, 0, bins - 1)
+    err = 0.0
+    for b in range(bins):
+        m = idx == b
+        if m.any():
+            err += m.mean() * abs(float(p[m].mean()) - float(y[m].mean()))
+    return round(float(err), 4)
+
+
 def _ranking_metrics(df: pd.DataFrame, score_col: str, k: int) -> dict[str, float]:
     precs, recs, ndcgs, hits = [], [], [], []
     for _, g in df.groupby("account_id"):
@@ -87,7 +101,10 @@ def train_and_evaluate(tx: pd.DataFrame, accounts: pd.DataFrame, interactions: p
     train_df, _ = snapshot(tx, accounts, interactions, train_cut, horizon)
     eval_df, _ = snapshot(tx, accounts, interactions, eval_cut, horizon)
 
-    clf = _make_clf().fit(train_df[FEATURES], train_df["label"])
+    raw = _make_clf().fit(train_df[FEATURES], train_df["label"])
+    eval_df["p_raw"] = raw.predict_proba(eval_df[FEATURES])[:, 1]
+    # isotonic calibration (3-fold, inside the training window only) so probabilities mean what they say
+    clf = CalibratedClassifierCV(_make_clf(), method="isotonic", cv=3).fit(train_df[FEATURES], train_df["label"])
     eval_df["p_model"] = clf.predict_proba(eval_df[FEATURES])[:, 1]
     # baselines
     eval_df["p_popularity"] = eval_df["peer_adoption"]
@@ -111,6 +128,22 @@ def train_and_evaluate(tx: pd.DataFrame, accounts: pd.DataFrame, interactions: p
         m.update(_ranking_metrics(eval_df, col, k))
         metrics["models"][name] = m
     metrics["brier"] = round(float(brier_score_loss(y, eval_df["p_model"])), 4)
+    metrics["brier_uncalibrated"] = round(float(brier_score_loss(y, eval_df["p_raw"])), 4)
+    metrics["ece"] = _ece(y.values, eval_df["p_model"].values)
+    metrics["ece_uncalibrated"] = _ece(y.values, eval_df["p_raw"].values)
+
+    # value-weighted accuracy: of all gross profit partners actually generated in new categories in the test window,
+    # how much sits in each method's top-k per partner? (Constella ranks by p × category gross profit.)
+    gp_unit = eval_df["category"].map(lambda c: C.CATEGORIES[c]["price"] * C.CATEGORIES[c]["margin"])
+    eval_df["gp_real"] = eval_df["label"] * gp_unit
+    eval_df["s_value"] = eval_df["p_model"] * gp_unit
+    total_gp = float(eval_df["gp_real"].sum()) or 1.0
+    vc = {}
+    for name, col in [("constella_value_ranked", "s_value"), ("constella_probability_ranked", "p_model"), ("popularity", "p_popularity")]:
+        got = sum(float(g.nlargest(k, col)["gp_real"].sum()) for _, g in eval_df.groupby("account_id"))
+        vc[name] = round(got / total_gp, 4)
+    metrics["gp_capture@5"] = vc
+    metrics["gp_capture_lift_vs_popularity"] = round(vc["constella_value_ranked"] / max(1e-9, vc["popularity"]), 2)
 
     # calibration (deciles)
     eval_df["bin"] = pd.qcut(eval_df["p_model"].rank(method="first"), 10, labels=False)
@@ -144,7 +177,7 @@ def train_and_evaluate(tx: pd.DataFrame, accounts: pd.DataFrame, interactions: p
 
     # final model: train on both windows (more recent data) for live scoring
     full = pd.concat([train_df, eval_df[train_df.columns]], ignore_index=True)
-    final = _make_clf().fit(full[FEATURES], full["label"])
+    final = CalibratedClassifierCV(_make_clf(), method="isotonic", cv=3).fit(full[FEATURES], full["label"])
     med = full[FEATURES].median().to_dict()
     q = full[FEATURES].quantile([0.25, 0.75])
     iqr = {f: float(max(1e-6, q.loc[0.75, f] - q.loc[0.25, f])) for f in FEATURES}
