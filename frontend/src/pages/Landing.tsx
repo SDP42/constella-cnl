@@ -103,7 +103,7 @@ export default function Landing() {
         },
       })
       gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) =>
-        gsap.from(el, { y: 60, opacity: 0, duration: 0.9, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 85%' } }),
+        gsap.from(el, { y: 60, opacity: 0, duration: 0.9, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }),
       )
       // horizontal journey through the 5 PS steps
       const track = document.querySelector<HTMLElement>('#journey-track')
@@ -115,8 +115,11 @@ export default function Landing() {
         })
       }
       gsap.utils.toArray<HTMLElement>('.spin-in').forEach((el, i) =>
-        gsap.from(el, { rotate: i % 2 ? -90 : 90, scale: 0.4, opacity: 0, duration: 1, ease: 'back.out(1.6)', scrollTrigger: { trigger: el, start: 'top 90%' } }),
+        gsap.from(el, { rotate: i % 2 ? -12 : 12, y: 80, opacity: 0, duration: 0.9, ease: 'back.out(1.4)', delay: (i % 3) * 0.08,
+          scrollTrigger: { trigger: el, start: 'top 92%', once: true } }),
       )
+      // positions shift once fonts and the 3D canvas settle
+      document.fonts?.ready.then(() => ScrollTrigger.refresh())
     },
     { scope: root },
   )
@@ -229,7 +232,7 @@ export default function Landing() {
               { v: '45 days', l: 'net working capital', c: 'bg-surface', shape: 'SVC' },
               { v: '₹3,195 Cr', l: 'BharatNet SI order — the shift to solutions', c: 'bg-bau-red text-bone', shape: 'FMSG' },
             ].map((b) => (
-              <div key={b.l} className={`spin-in reveal relative flex aspect-square flex-col justify-between border-2 border-ink p-4 shadow-[4px_4px_0_0_#121212] ${b.c}`}>
+              <div key={b.l} className={`spin-in relative flex aspect-square flex-col justify-between border-2 border-ink p-4 shadow-[4px_4px_0_0_#121212] ${b.c}`}>
                 <Glyph div={b.shape} size={22} />
                 <div>
                   <div className="display text-[clamp(1.4rem,2.6vw,2.4rem)] leading-none">{b.v}</div>
