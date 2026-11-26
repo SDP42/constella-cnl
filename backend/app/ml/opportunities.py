@@ -272,7 +272,8 @@ class OpportunityBuilder:
                             "solution_id": None, "est_value": round(annual, -2),
                             "est_margin": round(annual * C.CATEGORIES[ann]["margin"], -1), "est_annuity": round(annual, -2),
                             "probability": p, "score": round(vas, 2), "signal_ids": [sid],
-                            "explanation": {"why": [f"Renewal due {soon.min()}", "Auto-renew offer drafted for the partner"],
+                            "explanation": {"why": [(f"Renewal overdue since {soon.min()} — service lapsed" if pd.to_datetime(soon.min()) < self.now
+                                                     else f"Renewal due {soon.min()}"), "Auto-renew offer drafted for the partner"],
                                             "fits_credit": fits, "divisions": ["SVC"], "wallet_share": round(wallet_share, 3)},
                         })
 

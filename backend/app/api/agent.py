@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
-from app.agent.graph import GRAPH, MODEL, SUGGESTIONS, llm_available
+from app.agent.graph import GRAPH, MODEL, ROLE_SUGGESTIONS, SUGGESTIONS, llm_available
 from app.core.db import get_session
 from app.core.security import Principal, current_principal
 
@@ -22,8 +22,12 @@ class AskIn(BaseModel):
 
 
 @router.get("/info")
-def info(_: Principal = Depends(current_principal)) -> dict[str, Any]:
-    return {"mode": "llm" if llm_available() else "offline", "model": MODEL, "suggestions": SUGGESTIONS,
+def info(p: Principal = Depends(current_principal)) -> dict[str, Any]:
+    greet = {"rep": "your territory and pipeline", "head": "the national business", "architect": "solution design",
+             "steward": "data quality and model trust", "partner": "your proposals from CNL"}
+    return {"mode": "llm" if llm_available() else "offline", "model": MODEL,
+            "suggestions": ROLE_SUGGESTIONS.get(p.role, SUGGESTIONS), "role": p.role,
+            "greeting": f"Hi {p.name.split()[0]} — I can help with {greet.get(p.role, 'your work')}. Ask by typing or tap the mic.",
             "graph": ["retrieve", "plan", "act_llm | act_offline", "guard"]}
 
 

@@ -31,6 +31,14 @@ MAX_STEPS = 6
 GSTIN_RE = re.compile(r"\b\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]Z[0-9A-Z]\b")
 PAN_RE = re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b")
 
+ROLE_BRIEF = {
+    "rep": "The user is a field sales rep. Be tactical: what to do today, which partner to call, what to pitch, what to say. Prefer get_today_actions, list_open_opportunities, get_account_twin and scheme_slabs.",
+    "head": "The user is the national sales head. Be strategic: pipeline health, escalations, forecast vs FY29 goal, where to intervene. Prefer bi_summary, list_open_opportunities, credit_worklist and simulate_pilot.",
+    "architect": "The user is a solutions architect. Think in bills of materials, solution templates and deal shape. Prefer compose_solution, shape_deal and get_account_twin.",
+    "steward": "The user is the data & RevOps steward. Focus on data quality, unification and model trust. Explain how numbers are computed.",
+    "partner": "The user is a channel partner (TechNova). Speak as CNL's single point of contact; only discuss their own proposals.",
+}
+
 SYSTEM = """You are Constella Copilot, the revenue co-pilot for Creative Newtech's sales teams (a B2B technology
 distributor moving from selling products to selling integrated solutions and annuity services).
 
@@ -80,7 +88,7 @@ def act_llm(state: CopilotState) -> CopilotState:
     client = anthropic.Anthropic()
     s, p = state["session"], state["principal"]
     context = "\n".join(f"[{i + 1}] ({r['title']}) {r['text']}" for i, r in enumerate(state["retrieved"]))
-    user = (f"User: {p.name} (role: {p.role}).\n"
+    user = (f"User: {p.name} (role: {p.role}). {ROLE_BRIEF.get(p.role, '')}\n"
             + (f"Focus account id: {state['account_id']}.\n" if state.get("account_id") else "")
             + f"Retrieved playbook excerpts:\n{context or '(none)'}\n\nQuestion: {state['question']}")
     messages: list[dict[str, Any]] = [{"role": "user", "content": user}]
@@ -153,6 +161,37 @@ def act_offline(state: CopilotState) -> CopilotState:
                 aid = hits[0]["id"]
                 break
     lines: list[str] = []
+    if any(k in q for k in ("today", "my day", "what should i do", "priorit", "plan my")):
+        r = call("get_today_actions", {})
+        if "error" in r:
+            lines.append(r["error"])
+        else:
+            lines.append(f"**Your top actions for {r['date']}:**")
+            for i, a in enumerate(r["actions"][:6], 1):
+                lines.append(f"- {i}. {a['title']} — {a['why']}")
+            return {"answer": "\n".join(lines), "steps": steps}
+    if any(k in q for k in ("credit", "overdue", "collect", "payment", "owe", "dues", "outstanding", "receivable")):
+        r = call("credit_worklist", {"limit": 5})
+        lines.append(f"**Credit view:** grades {r['grade_distribution']} · {_fmt(r['headroom_unlock'])} of limit could be safely raised for A/B partners.")
+        for w in r["worklist"][:5]:
+            lines.append(f"- {w['name']} (grade {w['grade']}): {_fmt(w['overdue'])} overdue, {w['payment_days']} days — {w['action']}")
+    if any(k in q for k in ("forecast", "fy29", "revenue trend", "brand share", "anomal")):
+        r = call("bi_summary", {})
+        if "error" in r:
+            lines.append(r["error"])
+        else:
+            k = r["kpis"]
+            lines.append(f"**Business pulse:** 12m revenue {_fmt(k['revenue_12m'])} ({k['growth_yoy'] * 100:.0f}% YoY), next 6 months forecast "
+                         f"{_fmt(k['next_6m_forecast'])}; brand-business share {k['brand_share_latest'] * 100:.0f}% vs 40% FY29 target.")
+    if any(k in q for k in ("scheme", "slab", "rebate")):
+        r = call("scheme_slabs", {"limit": 5})
+        lines.append("**Closest to the next rebate slab:**")
+        for x in r["items"][:5]:
+            lines.append(f"- {x['name']}: {_fmt(x['gap'])} more {x['brand']} unlocks {x['next_rebate'] * 100:.1f}% (+{_fmt(x['rebate_gain'])})")
+    if any(k in q for k in ("annuity", "renewal", "recurring", "arr")):
+        r = call("annuity_summary", {})
+        lines.append(f"**Annuity:** ARR {_fmt(r['arr'])} (was {_fmt(r['arr_prev'])}), NRR {r['nrr'] * 100:.0f}%, attach rate {r['attach_rate'] * 100:.0f}%, "
+                     f"{r['renewals_due_90d']} renewals due in 90 days.")
     if any(k in q for k in ("pilot", "prove", "uplift", "scale or stop")):
         r = call("simulate_pilot", {"action_rate": 0.65})
         if "error" in r:
@@ -234,6 +273,17 @@ def build_graph():
 
 
 GRAPH = build_graph()
+ROLE_SUGGESTIONS = {
+    "rep": ["What should I do today?", "What should I pitch to TechNova Systems next?", "Which partners are close to a scheme slab?",
+            "Who owes us money in my territory?", "Can TechNova afford the classroom deal on credit, or should we DaaS it?"],
+    "head": ["How is the business tracking against FY29?", "Would the pilot scale or stop?", "Where is credit risk building up?",
+             "How healthy is our annuity book?", "Which opportunities are costing the most to sit idle?"],
+    "architect": ["Compose a Smart Classroom for TechNova Systems", "Can TechNova afford the classroom deal on credit, or should we DaaS it?",
+                  "What's our playbook for on-prem AI pods?", "Which opportunities are costing the most to sit idle?"],
+    "steward": ["How is the twin for TechNova Systems built?", "What are the data handling rules?", "Which opportunities are costing the most to sit idle?"],
+    "partner": ["What has CNL proposed for TechNova?", "Can we pay monthly instead of upfront?"],
+}
+
 SUGGESTIONS = [
     "What should I pitch to TechNova Systems next?",
     "Which of my opportunities are costing the most to sit idle?",

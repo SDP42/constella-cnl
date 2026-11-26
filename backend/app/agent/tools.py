@@ -45,6 +45,16 @@ TOOL_SPECS: list[dict[str, Any]] = [
     {"name": "search_playbooks",
      "description": "Search internal sales playbooks, routing contract, credit policy and data rules.",
      "input_schema": _schema({"query": {"type": "string"}}, ["query"])},
+    {"name": "get_today_actions", "description": "The current user's ranked 'today's 10 actions' (deals, SLA breaches, reorders, churn calls, scheme slabs).",
+     "input_schema": _schema({}, [])},
+    {"name": "credit_worklist", "description": "Partners with overdue exposure and credit grade, ranked for collections, plus grade distribution.",
+     "input_schema": _schema({"limit": {"type": "integer"}}, ["limit"])},
+    {"name": "bi_summary", "description": "Revenue trend, 6-month forecast, brand-business share vs 40% FY29 target and anomalies.",
+     "input_schema": _schema({}, [])},
+    {"name": "scheme_slabs", "description": "Partners closest to the next brand-scheme rebate slab (₹ gap and rebate gained).",
+     "input_schema": _schema({"limit": {"type": "integer"}}, ["limit"])},
+    {"name": "annuity_summary", "description": "Annuity ARR, net revenue retention, attach rate and renewals due in 90 days.",
+     "input_schema": _schema({}, [])},
     {"name": "simulate_pilot",
      "description": "Project the 6-month pilot (treatment vs randomised control) for a given rep action rate (0-1).",
      "input_schema": _schema({"action_rate": {"type": "number"}}, ["action_rate"])},
@@ -96,6 +106,29 @@ def run_tool(name: str, args: dict[str, Any], s: Session, p: Principal) -> dict[
             return opp_api.shape_deal(int(args["opportunity_id"]), s, p)
         if name == "search_playbooks":
             return {"results": rag.search(str(args["query"]), k=4)}
+        if name == "get_today_actions":
+            from app.api import finance as fin_api
+            if not p.rep_id:
+                return {"error": "Only sales reps have a personal action list."}
+            return fin_api.today(p.rep_id, s, p)
+        if name == "credit_worklist":
+            from app.api import finance as fin_api
+            sc = fin_api.credit(s, p, 5)
+            return {"grade_distribution": sc["distribution"], "headroom_unlock": sc["headroom_unlock"],
+                    "worklist": fin_api.worklist(s, p, int(args.get("limit") or 6))}
+        if name == "bi_summary":
+            if not p.can("read:all"):
+                return {"error": "BI overview is available to the sales head, architects and stewards."}
+            from app.api import insights as ins_api
+            o = ins_api.bi_overview(s, p)
+            return {"kpis": o["kpis"], "next_6m": o["forecast"]["forecast"], "anomalies": o["anomalies"][:3]}
+        if name == "scheme_slabs":
+            from app.api import finance as fin_api
+            return {"items": fin_api.schemes(s, p, int(args.get("limit") or 5))}
+        if name == "annuity_summary":
+            from app.api import finance as fin_api
+            a = fin_api.annuity(s, p)
+            return {k: a[k] for k in ("arr", "arr_prev", "nrr", "attach_rate", "renewals_due_90d")} | {"renewals": a["renewals"][:5]}
         if name == "simulate_pilot":
             if not p.can("pilot"):
                 return {"error": "Only the sales head can run pilot projections."}
