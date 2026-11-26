@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity, BarChart3, Bot, Boxes, Building2, Clock, Command as CmdIcon, Database, FlaskConical, Gauge, Inbox, LogOut,
-  Bell, BrainCircuit, Target, Fingerprint, Gavel, Globe2, Keyboard, Landmark, Network, Radar, Repeat, Search, ShieldCheck, Sparkles, Tags, Trophy, Truck, Workflow,
+  Bell, BrainCircuit, Route, Target, Wallet, Fingerprint, Gavel, Globe2, Keyboard, Landmark, Network, Radar, Repeat, Search, ShieldCheck, Sparkles, Tags, Trophy, Truck, Workflow,
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
@@ -18,12 +18,14 @@ const NAV: { group: string; items: NavItem[] }[] = [
     { to: '/app/inbox', label: 'Mission inbox', icon: <Inbox className="size-4" />, roles: ['rep', 'head', 'architect'] },
     { to: '/app/command', label: 'Command center', icon: <Gauge className="size-4" />, roles: ['head'] },
     { to: '/app/accounts', label: 'Account twins', icon: <Building2 className="size-4" />, roles: ['rep', 'head', 'architect', 'steward'] },
+    { to: '/app/beat', label: 'Beat plan', icon: <Route className="size-4" />, roles: ['rep', 'head'] },
     { to: '/app/solutions', label: 'Solution composer', icon: <Boxes className="size-4" />, roles: ['architect', 'head', 'rep'] },
     { to: '/app/partner', label: 'My proposals', icon: <Sparkles className="size-4" />, roles: ['partner'] },
   ] },
   { group: 'Money', items: [
     { to: '/app/dealdesk', label: 'Deal desk', icon: <Gavel className="size-4" />, roles: ['rep', 'head', 'architect'] },
     { to: '/app/credit', label: 'Credit & cash', icon: <Landmark className="size-4" />, roles: ['rep', 'head', 'steward'] },
+    { to: '/app/collections', label: 'Collections & cash', icon: <Wallet className="size-4" />, roles: ['head', 'steward', 'rep'] },
     { to: '/app/annuity', label: 'Annuity ledger', icon: <Repeat className="size-4" />, roles: ['head', 'architect', 'rep'] },
   ] },
   { group: 'Intelligence', items: [
