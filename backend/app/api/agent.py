@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
-from app.agent.graph import GRAPH, MODEL, ROLE_SUGGESTIONS, SUGGESTIONS, llm_available
+from app.agent.graph import MODEL, ROLE_SUGGESTIONS, SUGGESTIONS, get_graph, llm_available
 from app.core.db import get_session
 from app.core.security import Principal, current_principal
 
@@ -34,7 +34,7 @@ def info(p: Principal = Depends(current_principal)) -> dict[str, Any]:
 @router.post("/ask")
 def ask(body: AskIn, s: Session = Depends(get_session), p: Principal = Depends(current_principal)) -> dict[str, Any]:
     t0 = time.perf_counter()
-    out = GRAPH.invoke({"question": body.question, "account_id": body.account_id, "principal": p, "session": s,
+    out = get_graph().invoke({"question": body.question, "account_id": body.account_id, "principal": p, "session": s,
                         "steps": []})
     return {"answer": out.get("answer", ""), "mode": out.get("mode"), "steps": out.get("steps", []),
             "citations": out.get("citations", []), "error": out.get("error"),

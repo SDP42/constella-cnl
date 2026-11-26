@@ -17,8 +17,6 @@ import re
 import time
 from typing import Any, TypedDict
 
-import anthropic
-from langgraph.graph import END, START, StateGraph
 from sqlmodel import Session
 
 from app.agent import rag
@@ -85,6 +83,8 @@ def plan(state: CopilotState) -> CopilotState:
 
 
 def act_llm(state: CopilotState) -> CopilotState:
+    import anthropic  # lazy: only loaded when an API key is configured (keeps the free-tier footprint small)
+
     client = anthropic.Anthropic()
     s, p = state["session"], state["principal"]
     context = "\n".join(f"[{i + 1}] ({r['title']}) {r['text']}" for i, r in enumerate(state["retrieved"]))
@@ -257,6 +257,8 @@ def _route(state: CopilotState) -> str:
 
 
 def build_graph():
+    from langgraph.graph import END, START, StateGraph  # lazy import
+
     g = StateGraph(CopilotState)
     g.add_node("retrieve", retrieve)
     g.add_node("plan", plan)
@@ -272,7 +274,16 @@ def build_graph():
     return g.compile()
 
 
-GRAPH = build_graph()
+_GRAPH = None
+
+
+def get_graph():
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = build_graph()
+    return _GRAPH
+
+
 ROLE_SUGGESTIONS = {
     "rep": ["What should I do today?", "What should I pitch to TechNova Systems next?", "Which partners are close to a scheme slab?",
             "Who owes us money in my territory?", "Can TechNova afford the classroom deal on credit, or should we DaaS it?"],
