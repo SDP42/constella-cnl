@@ -31,7 +31,7 @@ export default function ModelLab() {
                 <XAxis dataKey="name" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
                 <Tooltip />
-                <RBar dataKey="ap" name="Avg precision" fill="#a16207" radius={[6, 6, 0, 0]} />
+                <RBar isAnimationActive={false} dataKey="ap" name="Avg precision" fill="#a16207" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -45,7 +45,7 @@ export default function ModelLab() {
                 <YAxis dataKey="actual" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => pct(v)} tick={{ fill: CHART.axis, fontSize: 11 }} width={44} />
                 <Tooltip formatter={(v: any) => pct(v, 1)} />
                 <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 0.3, y: 0.3 }]} stroke="#a8a29e" strokeDasharray="4 4" />
-                <Line dataKey="actual" stroke="#3e5c76" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line isAnimationActive={false} dataKey="actual" stroke="#3e5c76" strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -59,7 +59,7 @@ export default function ModelLab() {
                 <YAxis tickFormatter={(v) => pct(v)} tick={{ fill: CHART.axis, fontSize: 11 }} width={44} />
                 <Tooltip formatter={(v: any) => pct(v)} labelFormatter={(l) => `Top ${l}% of pairs`} />
                 <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 100, y: 1 }]} stroke="#a8a29e" strokeDasharray="4 4" />
-                <Line dataKey="pct_captured" stroke="#3f7d5c" strokeWidth={2.5} dot={false} />
+                <Line isAnimationActive={false} dataKey="pct_captured" stroke="#3f7d5c" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

@@ -75,7 +75,7 @@ export default function AccountTwin() {
                 <YAxis tickFormatter={(v) => inr(v, 0)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={60} />
                 <Tooltip formatter={(v: any, k: any) => [inr(v), DIV_NAME[k] ?? k]} />
                 {['EB', 'HON', 'FMSG', 'FMCT', 'SVC'].map((k) => (
-                  <Area key={k} type="monotone" dataKey={k} stackId="1" stroke={DIV_COLORS_MAP[k]} fill={DIV_COLORS_MAP[k]} fillOpacity={0.55} />
+                  <Area isAnimationActive={false} key={k} type="monotone" dataKey={k} stackId="1" stroke={DIV_COLORS_MAP[k]} fill={DIV_COLORS_MAP[k]} fillOpacity={0.55} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>

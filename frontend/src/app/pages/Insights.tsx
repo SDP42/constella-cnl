@@ -36,9 +36,9 @@ function Fy29() {
                 <YAxis yAxisId="l" tickFormatter={(v) => inr(v, 0)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={70} />
                 <YAxis yAxisId="r" orientation="right" domain={[0, 0.6]} tickFormatter={(v) => pct(v)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any, k: any) => (k === 'brand_share' ? pct(v) : inr(v))} />
-                <RBar yAxisId="l" dataKey="baseline" fill="#d6d3d1" radius={[6, 6, 0, 0]} name="Without Constella" />
-                <RBar yAxisId="l" dataKey="revenue" fill="#a16207" radius={[6, 6, 0, 0]} name="With Constella" />
-                <Line yAxisId="r" dataKey="brand_share" stroke="#3f7d5c" strokeWidth={2.5} dot={{ r: 4 }} name="Brand share" />
+                <RBar isAnimationActive={false} yAxisId="l" dataKey="baseline" fill="#d6d3d1" radius={[6, 6, 0, 0]} name="Without Constella" />
+                <RBar isAnimationActive={false} yAxisId="l" dataKey="revenue" fill="#a16207" radius={[6, 6, 0, 0]} name="With Constella" />
+                <Line isAnimationActive={false} yAxisId="r" dataKey="brand_share" stroke="#3f7d5c" strokeWidth={2.5} dot={{ r: 4 }} name="Brand share" />
                 <ReferenceLine yAxisId="l" y={x.target_revenue} stroke="#1c1917" strokeDasharray="4 4" label={{ value: '₹6,000 Cr goal', fill: '#1c1917', fontSize: 11, position: 'insideTopLeft' }} />
                 <ReferenceLine yAxisId="r" y={0.4} stroke="#3f7d5c" strokeDasharray="2 4" />
               </ComposedChart>
@@ -77,9 +77,9 @@ export default function Insights() {
                 <XAxis dataKey="month" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={24} />
                 <YAxis tickFormatter={(v) => inr(v, 0)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={64} />
                 <Tooltip formatter={(v: any) => (Array.isArray(v) ? `${inr(v[0])} – ${inr(v[1])}` : inr(v))} />
-                <Area dataKey="band" stroke="none" fill="#c99a2e" fillOpacity={0.18} name="80% interval" />
-                <Area dataKey="actual" stroke="#1c1917" fill="#1c1917" fillOpacity={0.06} strokeWidth={2} name="Actual" />
-                <Area dataKey="forecast" stroke="#a16207" fill="none" strokeWidth={2.5} strokeDasharray="6 4" name="Forecast" />
+                <Area isAnimationActive={false} dataKey="band" stroke="none" fill="#c99a2e" fillOpacity={0.18} name="80% interval" />
+                <Area isAnimationActive={false} dataKey="actual" stroke="#1c1917" fill="#1c1917" fillOpacity={0.06} strokeWidth={2} name="Actual" />
+                <Area isAnimationActive={false} dataKey="forecast" stroke="#a16207" fill="none" strokeWidth={2.5} strokeDasharray="6 4" name="Forecast" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -93,7 +93,7 @@ export default function Insights() {
                 <YAxis domain={[0, 0.5]} tickFormatter={(v) => pct(v)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
                 <Tooltip formatter={(v: any) => pct(v, 1)} />
                 <ReferenceLine y={0.4} stroke="#3f7d5c" strokeDasharray="4 4" label={{ value: 'FY29 target', fontSize: 11, fill: '#3f7d5c', position: 'insideTopRight' }} />
-                <Area dataKey="brand_share" stroke="#3f7d5c" fill="#3f7d5c" fillOpacity={0.15} strokeWidth={2} />
+                <Area isAnimationActive={false} dataKey="brand_share" stroke="#3f7d5c" fill="#3f7d5c" fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

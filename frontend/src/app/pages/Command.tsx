@@ -47,7 +47,7 @@ export default function Command() {
                     <XAxis type="number" hide />
                     <YAxis type="category" dataKey="division" width={50} tick={{ fill: CHART.axis, fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip formatter={(v: any) => inr(v)} labelFormatter={(l: any) => DIV_NAME[String(l)] ?? l} cursor={{ fill: 'rgba(28,25,23,.04)' }} />
-                    <RBar dataKey="value" radius={[0, 8, 8, 0]}>
+                    <RBar isAnimationActive={false} dataKey="value" radius={[0, 8, 8, 0]}>
                       {x.by_division.filter((b: any) => b.division !== '—').map((b: any) => <Cell key={b.division} fill={DIV_COLORS_MAP[b.division] ?? '#999'} />)}
                     </RBar>
                   </BarChart>

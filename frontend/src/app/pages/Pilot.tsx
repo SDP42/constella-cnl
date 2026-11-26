@@ -57,9 +57,9 @@ export default function Pilot() {
                       <XAxis dataKey="month" tick={{ fill: CHART.axis, fontSize: 12 }} axisLine={false} tickLine={false} />
                       <YAxis tickFormatter={(v) => inr(v, 0)} tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={64} />
                       <Tooltip formatter={(v: any) => (Array.isArray(v) ? `${inr(v[0])} – ${inr(v[1])}` : inr(v))} />
-                      <Area dataKey="band" fill="#3f7d5c" fillOpacity={0.15} stroke="none" />
-                      <Line dataKey="treatment" stroke="#3f7d5c" strokeWidth={3} dot={{ r: 3 }} name="Treatment (Constella)" />
-                      <Line dataKey="control" stroke="#a8a29e" strokeWidth={2.5} strokeDasharray="6 4" dot={{ r: 3 }} name="Control (holdout)" />
+                      <Area isAnimationActive={false} dataKey="band" fill="#3f7d5c" fillOpacity={0.15} stroke="none" />
+                      <Line isAnimationActive={false} dataKey="treatment" stroke="#3f7d5c" strokeWidth={3} dot={{ r: 3 }} name="Treatment (Constella)" />
+                      <Line isAnimationActive={false} dataKey="control" stroke="#a8a29e" strokeWidth={2.5} strokeDasharray="6 4" dot={{ r: 3 }} name="Control (holdout)" />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>

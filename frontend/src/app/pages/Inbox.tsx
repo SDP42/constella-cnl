@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CalendarClock, Flame, Mic, Rocket, Sparkles, TrendingDown } from 'lucide-react'
+import { AlertTriangle, BadgePercent, CalendarClock, CheckCircle2, Flame, Mic, Rocket, Sparkles, TrendingDown } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import CountUp from '@/components/reactbits/CountUp'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { inr, pct } from '@/lib/format'
-import { Card, Empty, KindPill, Loading, Page, Stat, StatusPill, useApi } from '../kit'
+import { Card, Empty, KindPill, Loading, Page, Reasoning, Stat, StatusPill, useApi } from '../kit'
 import { OpportunityDrawer } from '../OpportunityDrawer'
 
 export function OppRow({ o, onOpen }: { o: any; onOpen: (id: number) => void }) {
@@ -71,6 +71,9 @@ export default function Inbox() {
   const nudges = useApi(['nudges'], '/api/ai/nudges')
   const churn = useApi(['churn'], '/api/predict/churn?limit=6')
   const next = useApi(['next-orders'], '/api/predict/next-orders?limit=6')
+  const today = useApi<any>(['today', repId], `/api/reps/${repId}/today`)
+  const schemes = useApi<any[]>(['schemes'], '/api/schemes/progress?limit=5')
+  const [done, setDone] = useState<Record<number, boolean>>({})
   const qc = useQueryClient()
   const [open, setOpen] = useState<number | null>(null)
   const [filter, setFilter] = useState<string>('all')
@@ -102,6 +105,29 @@ export default function Inbox() {
           </div>
         </div>
       )}
+
+      <Card title={<span className="flex items-center gap-2"><CheckCircle2 className="size-4" />Today’s 10 actions</span>}
+        sub={today.data ? `Ranked across ${today.data.generated}` : 'Building your day…'} className="mb-4">
+        {!today.data ? <Loading rows={3} /> : (
+          <ol className="grid gap-2 md:grid-cols-2">
+            {today.data.actions.map((a: any, i: number) => (
+              <li key={i} className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors ${done[i] ? 'bg-spec-svc/5 opacity-60' : 'bg-white/70 hover:bg-white'}`}>
+                <button onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))} aria-label={done[i] ? 'Mark not done' : 'Mark done'}
+                  className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border text-[10px] ${done[i] ? 'border-spec-svc bg-spec-svc text-white' : 'border-ink/20'}`}>{done[i] ? '✓' : i + 1}</button>
+                <div className="min-w-0 text-sm">
+                  <div className={`font-medium ${done[i] ? 'line-through' : ''}`}>
+                    <span className="mr-1.5 rounded-full bg-ink/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-soft">{a.type}</span>{a.title}
+                  </div>
+                  <div className="truncate text-xs text-ink-soft">{a.why}</div>
+                </div>
+                {a.opportunity_id && <button onClick={() => setOpen(a.opportunity_id)} className="ml-auto shrink-0 text-xs text-gold hover:underline">Open</button>}
+              </li>
+            ))}
+          </ol>
+        )}
+        <Reasoning how="One list built from five sources: open deals ranked by cost of delay, breached SLAs (weighted ×2), reorders the rhythm model says are due, partners the churn model flags above 85%, and partners within reach of a brand-scheme rebate slab. Quotas keep the day balanced."
+          why="Reps don't need another dashboard — they need to know who to call first. Headcount stays flat because the ranking, not extra people, decides where effort goes." />
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <div className="space-y-4">
@@ -150,6 +176,17 @@ export default function Inbox() {
 
         <div className="space-y-4">
           <Capture />
+          <Card title={<span className="flex items-center gap-2"><BadgePercent className="size-4" />Scheme slabs within reach</span>} sub="Partners close to the next brand rebate — a reason to call today">
+            <ul className="space-y-2.5">
+              {schemes.data?.map((x: any, i: number) => (
+                <li key={i} className="text-sm">
+                  <div className="flex items-center justify-between"><span className="truncate font-medium">{x.name}</span><span className="num shrink-0 text-xs text-gold">{inr(x.gap)} to go</span></div>
+                  <div className="text-xs text-ink-soft">{x.scheme} · unlocks {pct(x.next_rebate, 1)} (+{inr(x.rebate_gain)})</div>
+                </li>
+              ))}
+            </ul>
+            <Reasoning how="Quarter-to-date turnover per partner per brand compared with that brand's rebate slabs; shown only when the gap is under 60% of the next slab." why="Brand schemes are often left unclaimed. Telling a partner '₹88k more Samsung earns you 2.5% back' is the easiest cross-sell conversation there is." />
+          </Card>
           <Card title={<span className="flex items-center gap-2"><CalendarClock className="size-4" />Reorders due</span>} sub="Predicted from each partner’s ordering rhythm">
             <ul className="space-y-2">
               {next.data?.map((n: any) => (

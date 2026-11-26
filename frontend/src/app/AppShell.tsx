@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity, BarChart3, Bot, Boxes, Building2, Clock, Command as CmdIcon, Database, FlaskConical, Gauge, Inbox, LogOut,
-  Network, Search, ShieldCheck, Sparkles, Tags, Workflow,
+  Gavel, Landmark, Network, Repeat, Search, ShieldCheck, Sparkles, Tags, Workflow,
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
@@ -20,6 +20,11 @@ const NAV: { group: string; items: NavItem[] }[] = [
     { to: '/app/accounts', label: 'Account twins', icon: <Building2 className="size-4" />, roles: ['rep', 'head', 'architect', 'steward'] },
     { to: '/app/solutions', label: 'Solution composer', icon: <Boxes className="size-4" />, roles: ['architect', 'head', 'rep'] },
     { to: '/app/partner', label: 'My proposals', icon: <Sparkles className="size-4" />, roles: ['partner'] },
+  ] },
+  { group: 'Money', items: [
+    { to: '/app/dealdesk', label: 'Deal desk', icon: <Gavel className="size-4" />, roles: ['rep', 'head', 'architect'] },
+    { to: '/app/credit', label: 'Credit & cash', icon: <Landmark className="size-4" />, roles: ['rep', 'head', 'steward'] },
+    { to: '/app/annuity', label: 'Annuity ledger', icon: <Repeat className="size-4" />, roles: ['head', 'architect', 'rep'] },
   ] },
   { group: 'Intelligence', items: [
     { to: '/app/insights', label: 'BI & forecast', icon: <BarChart3 className="size-4" />, roles: ['head', 'architect', 'steward'] },
