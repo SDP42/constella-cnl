@@ -20,10 +20,13 @@ def _sla(s: Session) -> str:
 
 
 def _rescore(_: Session) -> str:
-    from app import pipeline
+    from app.services import learning
 
-    pipeline.warm(verbose=False)
-    return "model retrained and live whitespace re-scored"
+    r = learning.retrain("nightly schedule")
+    if r.get("status") == "busy":
+        return "skipped: retrain already running"
+    return (f"v{r['version']} {'promoted' if r['promoted'] else 'kept champion'} · GP@5 {r['challenger_gp5']} "
+            f"vs {r['champion_gp5']} · {r['rescore']['opportunities_moved']} opportunities re-scored")
 
 
 JOBS: dict[str, dict[str, object]] = {
