@@ -110,6 +110,9 @@ def build(verbose: bool = True) -> dict[str, Any]:
         automation.daily_brief_job(s)
         automation.drain_outbox(s)
         log("automation rules seeded and first runs executed")
+        from app.api.labs import attribute_orders
+
+        log(f"attribution: {attribute_orders(s)}")
     log(f"done in {time.time() - t0:.1f}s")
     return {"accounts": len(w.accounts), "opportunities": len(b.opps), "signals": len(b.signals)}
 

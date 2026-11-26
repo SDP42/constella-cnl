@@ -34,6 +34,8 @@ JOBS: dict[str, dict[str, object]] = {
                     "desc": "WhatsApp morning brief per rep"},
     "outbox": {"fn": lambda s: f"{automation.drain_outbox(s)} messages delivered", "every": "30 s",
                "desc": "Deliver queued WhatsApp / email / webhook messages"},
+    "attribution": {"fn": lambda s: "{matched} opportunities won by order matching (₹{value:,})".format(**__import__("app.api.labs", fromlist=["x"]).attribute_orders(s)),
+                    "every": "hourly", "desc": "Match new orders to open opportunities (120-day window) and credit the owners"},
     "rescore": {"fn": _rescore, "every": "nightly 02:00", "desc": "Retrain model and re-score whitespace"},
 }
 
