@@ -72,8 +72,12 @@ export default function Landing() {
       setChapter((prev) => (prev === c ? prev : c))
     }
     on()
+    // re-measure once layout settles (fonts, images, restored scroll), otherwise the first frame can show the wrong chapter
+    const ids = [50, 300, 1000, 2500].map((ms) => setTimeout(on, ms))
     addEventListener('scroll', on, { passive: true })
-    return () => removeEventListener('scroll', on)
+    addEventListener('resize', on)
+    addEventListener('load', on)
+    return () => { ids.forEach(clearTimeout); removeEventListener('scroll', on); removeEventListener('resize', on); removeEventListener('load', on) }
   }, [])
 
   useGSAP(
