@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '@/lib/api'
 import { DIV_COLORS_MAP, KIND } from './theme'
 
@@ -119,5 +119,46 @@ export function Reasoning({ how, why, source }: { how: ReactNode; why?: ReactNod
         {source && <p><b className="text-ink/80">Source:</b> {source}</p>}
       </div>
     </details>
+  )
+}
+
+/** Horizontal scroller: snap points, faded edges, arrow buttons, and vertical wheel → sideways scroll. */
+export function HScroll({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [edge, setEdge] = useState({ left: false, right: true })
+  const update = () => {
+    const el = ref.current
+    if (!el) return
+    setEdge({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 })
+  }
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    update()
+    const wheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      const atStart = el.scrollLeft <= 0 && e.deltaY < 0
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1 && e.deltaY > 0
+      if (atStart || atEnd) return // let the page scroll when the row is exhausted
+      e.preventDefault()
+      e.stopPropagation()
+      el.scrollBy({ left: e.deltaY, behavior: 'auto' })
+    }
+    el.addEventListener('wheel', wheel, { passive: false })
+    addEventListener('resize', update)
+    return () => { el.removeEventListener('wheel', wheel); removeEventListener('resize', update) }
+  }, [])
+  const go = (dir: number) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.8, behavior: 'smooth' })
+  return (
+    <div className={`relative min-w-0 ${className}`}>
+      <div ref={ref} onScroll={update} data-lenis-prevent
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:thin] [&>*]:snap-start">
+        {children}
+      </div>
+      <div aria-hidden className={`pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-white to-transparent transition-opacity ${edge.left ? 'opacity-100' : 'opacity-0'}`} />
+      <div aria-hidden className={`pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent transition-opacity ${edge.right ? 'opacity-100' : 'opacity-0'}`} />
+      {edge.left && <button onClick={() => go(-1)} aria-label="Scroll left" className="absolute left-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-md ring-1 ring-ink/10 hover:bg-pearl">‹</button>}
+      {edge.right && <button onClick={() => go(1)} aria-label="Scroll right" className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-md ring-1 ring-ink/10 hover:bg-pearl">›</button>}
+    </div>
   )
 }

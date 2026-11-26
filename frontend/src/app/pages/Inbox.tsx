@@ -6,7 +6,7 @@ import CountUp from '@/components/reactbits/CountUp'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { inr, pct } from '@/lib/format'
-import { Card, Empty, KindPill, Loading, Page, Reasoning, Stat, StatusPill, useApi } from '../kit'
+import { Card, Empty, HScroll, KindPill, Loading, Page, Reasoning, Stat, StatusPill, useApi } from '../kit'
 import { OpportunityDrawer } from '../OpportunityDrawer'
 
 export function OppRow({ o, onOpen }: { o: any; onOpen: (id: number) => void }) {
@@ -129,13 +129,13 @@ export default function Inbox() {
           why="Reps don't need another dashboard — they need to know who to call first. Headcount stays flat because the ranking, not extra people, decides where effort goes." />
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
-        <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-4">
           <Card title="AI-suggested campaigns" sub="Segments the models found in your territory — launch one to create routed opportunities and queue outreach.">
             {!nudges.data ? <Loading rows={2} /> : (
-              <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
-                {nudges.data.slice(0, 8).map((n: any) => (
-                  <div key={n.id} className="w-72 shrink-0 snap-start rounded-2xl border border-ink/5 bg-white/80 p-4">
+              <HScroll>
+                {nudges.data.slice(0, 10).map((n: any) => (
+                  <div key={n.id} className="flex w-[min(300px,80vw)] shrink-0 flex-col justify-between rounded-2xl border border-ink/5 bg-white/80 p-4">
                     <div className="flex items-center justify-between text-[11px] text-ink-soft">
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 capitalize">{n.kind}</span>
                       <span className="num">{Math.round(n.confidence * 100)}% conf.</span>
@@ -150,7 +150,7 @@ export default function Inbox() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </HScroll>
             )}
           </Card>
 
@@ -174,7 +174,7 @@ export default function Inbox() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Capture />
           <Card title={<span className="flex items-center gap-2"><BadgePercent className="size-4" />Scheme slabs within reach</span>} sub="Partners close to the next brand rebate — a reason to call today">
             <ul className="space-y-2.5">
