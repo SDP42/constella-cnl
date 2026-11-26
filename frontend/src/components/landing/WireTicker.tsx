@@ -16,15 +16,15 @@ export function WireTicker() {
   }, [])
   const row = items.length ? items : [{ kind: 'whitespace', title: 'Listening to the partner network…', account: 'Constella', city: 'Mumbai', k: -1 }]
   return (
-    <div className="relative overflow-hidden border-y-2 border-ink bg-ink text-bone" aria-label="Live signal wire">
-      <div className="flex w-max animate-marquee-rev gap-10 py-2.5 hover:[animation-play-state:paused]">
+    <div className="glass relative overflow-hidden rounded-full text-ink" aria-label="Live signal wire">
+      <div className="flex w-max animate-marquee gap-10 py-2.5 hover:[animation-play-state:paused]">
         {[...row, ...row].map((it, i) => (
           <span key={`${it.k}-${i}`} className="flex items-center gap-3 whitespace-nowrap text-[13px]">
-            <span className="caps text-bau-yellow">{KIND_LABEL[it.kind] ?? it.kind}</span>
+            <span className="label !text-spec-eb">{KIND_LABEL[it.kind] ?? it.kind}</span>
             <span className="font-medium">{it.account}</span>
             <span className="opacity-60">· {it.city} ·</span>
             <span className="max-w-[46ch] truncate opacity-75">{it.title.replace(/^Intent captured: /, '')}</span>
-            <span aria-hidden className="inline-block size-2 rotate-45 bg-bau-red" />
+            <span aria-hidden className="inline-block size-1.5 rounded-full bg-ink/30" />
           </span>
         ))}
       </div>
