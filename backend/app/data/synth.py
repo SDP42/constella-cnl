@@ -271,6 +271,7 @@ def build_world() -> World:
         a["_intent_events"] = intent_events
 
         owned: dict[str, date] = {}
+        units: dict[str, int] = {}  # installed units per category (sizes service contracts)
         scale = max(1.0, a["employees"] / 100)
         # account-level engagement: some accounts are simply more active
         activity = g.lognormal(0, 0.4)
@@ -326,6 +327,7 @@ def build_world() -> World:
                         "rep_id": region_reps[0]["id"] if region_reps else None,
                     })
                     tx_id += 1
+                    units[c] = units.get(c, 0) + qty
                     if c in C.ANNUITY_FOR or c in ("interactive_display", "digital_signage", "air_purifier"):
                         due = None
                         ann = C.ANNUITY_FOR.get(c)
@@ -334,15 +336,16 @@ def build_world() -> World:
                             due = day + timedelta(days=30 * per)
                         w.assets.append({"account_id": a["id"], "sku": p["sku"], "category": c,
                                          "installed_on": day, "qty": qty, "next_service_due": due})
-        # Low natural annuity attach
+        # Natural annuity attach is low today (~1 in 6 eligible installs): contracts cover the installed units
         for c_base, ann in C.ANNUITY_FOR.items():
-            if c_base in owned and r.random() < 0.12 * min(2.0, need[cat_idx[ann]] * 6 + 0.5):
+            if c_base in owned and r.random() < 0.16 * min(2.0, need[cat_idx[ann]] * 6 + 0.5):
                 p = skus_by_cat[ann][0]
                 first = owned[c_base] + timedelta(days=r.randint(5, 40))
                 per = C.CATEGORIES[ann]["recurring"]
                 d = first
+                covered = max(1, int(units.get(c_base, 1) * r.uniform(0.5, 1.0)))
                 while d <= now:
-                    qty = max(1, int(scale * 2))
+                    qty = covered
                     amount = qty * p["unit_price"]
                     w.transactions.append({
                         "id": tx_id, "account_id": a["id"], "sku": p["sku"], "division_code": "SVC",
