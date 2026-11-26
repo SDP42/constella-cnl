@@ -1,34 +1,35 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/playfair-display";
-@import "@fontsource-variable/playfair-display/wght-italic.css";
+@import "@fontsource-variable/outfit";
 @import "@fontsource-variable/inter-tight";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Constella v2 — "Constructivist Revenue Machine" (design-system/constella/MASTER.md) */
 @theme inline {
-  --font-sans: 'Inter Tight Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Playfair Display Variable', Georgia, serif;
-  --font-display: 'Playfair Display Variable', Georgia, serif;
+  --font-sans: 'Outfit Variable', 'Inter Tight Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Outfit Variable', ui-sans-serif, sans-serif;
+  --font-display: 'Outfit Variable', ui-sans-serif, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  /* Constella "Celestial Atlas" — see design-system/constella/MASTER.md */
-  --color-paper: #f3ecdf;
-  --color-paper-2: #eae0cc;
-  --color-vellum: #fbf7ef;
-  --color-ink: #17140f;
-  --color-ink-soft: #5a5045;
-  --color-gold: #c98a00;
-  --color-gold-bright: #f5b700;
-  --color-rust: #b4432a;
-  --color-verdigris: #2e7d5b;
-  --color-div-eb: #2b5d8c;
-  --color-div-hon: #c98a00;
-  --color-div-fmsg: #a8326e;
-  --color-div-fmct: #5b4a9e;
-  --color-div-svc: #2e7d5b;
+  --color-bone: #f0ede6;
+  --color-surface: #faf8f3;
+  --color-ink: #121212;
+  --color-ink-soft: #5c5a55;
+  --color-bau-red: #d02020;
+  --color-bau-blue: #1040c0;
+  --color-bau-yellow: #f5b700;
+  --color-bau-green: #1e8f4e;
+  --color-div-eb: #1040c0;
+  --color-div-hon: #f5b700;
+  --color-div-fmsg: #d02020;
+  --color-div-fmct: #121212;
+  --color-div-svc: #1e8f4e;
+
+  --shadow-hard: 4px 4px 0 0 #121212;
+  --shadow-hard-lg: 8px 8px 0 0 #121212;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -61,59 +62,56 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 
-  --animate-marquee: marquee 40s linear infinite;
-  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.2, 1) infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-marquee-rev: marquee 38s linear infinite reverse;
+  --animate-spin-slow: spin 18s linear infinite;
   @keyframes marquee {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
-  @keyframes pulse-ring {
-    0% { transform: scale(0.8); opacity: 0.9; }
-    100% { transform: scale(2.4); opacity: 0; }
-  }
 }
 
 :root {
-  --background: #f3ecdf;
-  --foreground: #17140f;
-  --card: #fbf7ef;
-  --card-foreground: #17140f;
-  --popover: #fbf7ef;
-  --popover-foreground: #17140f;
-  --primary: #17140f;
-  --primary-foreground: #fbf7ef;
-  --secondary: #eae0cc;
-  --secondary-foreground: #17140f;
-  --muted: #eae0cc;
-  --muted-foreground: #5a5045;
-  --accent: #efe3c4;
-  --accent-foreground: #17140f;
-  --destructive: #b4432a;
-  --border: rgb(23 20 15 / 0.13);
-  --input: rgb(23 20 15 / 0.18);
-  --ring: #c98a00;
-  --chart-1: #c98a00;
-  --chart-2: #2b5d8c;
-  --chart-3: #a8326e;
-  --chart-4: #5b4a9e;
-  --chart-5: #2e7d5b;
-  --radius: 0.5rem;
-  --sidebar: #eee5d3;
-  --sidebar-foreground: #17140f;
-  --sidebar-primary: #17140f;
-  --sidebar-primary-foreground: #fbf7ef;
-  --sidebar-accent: #e4d8bf;
-  --sidebar-accent-foreground: #17140f;
-  --sidebar-border: rgb(23 20 15 / 0.12);
-  --sidebar-ring: #c98a00;
+  --background: #f0ede6;
+  --foreground: #121212;
+  --card: #faf8f3;
+  --card-foreground: #121212;
+  --popover: #faf8f3;
+  --popover-foreground: #121212;
+  --primary: #121212;
+  --primary-foreground: #faf8f3;
+  --secondary: #e6e1d6;
+  --secondary-foreground: #121212;
+  --muted: #e6e1d6;
+  --muted-foreground: #5c5a55;
+  --accent: #f5b700;
+  --accent-foreground: #121212;
+  --destructive: #d02020;
+  --border: rgb(18 18 18 / 0.14);
+  --input: rgb(18 18 18 / 0.25);
+  --ring: #1040c0;
+  --chart-1: #1040c0;
+  --chart-2: #f5b700;
+  --chart-3: #d02020;
+  --chart-4: #121212;
+  --chart-5: #1e8f4e;
+  --radius: 0rem;
+  --sidebar: #121212;
+  --sidebar-foreground: #f0ede6;
+  --sidebar-primary: #f5b700;
+  --sidebar-primary-foreground: #121212;
+  --sidebar-accent: #222220;
+  --sidebar-accent-foreground: #f0ede6;
+  --sidebar-border: rgb(240 237 230 / 0.12);
+  --sidebar-ring: #f5b700;
 }
 
 @layer base {
@@ -129,67 +127,59 @@
     min-height: 100dvh;
   }
   ::selection {
-    background: #f5b70066;
+    background: #f5b700;
+    color: #121212;
   }
   :focus-visible {
-    outline: 2px solid var(--color-gold);
+    outline: 3px solid #1040c0;
     outline-offset: 2px;
   }
-  button, a, [role='button'] {
+  button, a, [role='button'], summary {
     cursor: pointer;
   }
 }
 
 @layer utilities {
-  /* paper grain + vignette; no grid lines anywhere */
-  .paper {
-    background-color: var(--color-paper);
-    background-image:
-      radial-gradient(120% 80% at 50% 0%, rgb(255 251 240 / 0.9), transparent 60%),
-      radial-gradient(90% 70% at 100% 100%, rgb(201 138 0 / 0.07), transparent 60%);
-  }
-  .dossier {
-    background: var(--color-vellum);
-    border: 1px solid rgb(23 20 15 / 0.12);
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 18px 40px -28px rgb(60 40 10 / 0.35);
+  .display {
+    font-family: var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.045em;
+    line-height: 0.86;
   }
   .caps {
     font-family: var(--font-mono);
     font-size: 0.7rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
   }
-  .hairline {
-    border-color: rgb(23 20 15 / 0.14);
-  }
-  .stamp {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1.5px solid currentColor;
-    border-radius: 4px;
-    padding: 0.1rem 0.45rem;
+  .num {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    transform: rotate(-1.5deg);
+    font-variant-numeric: tabular-nums;
   }
-  .ink-underline {
-    background-image: linear-gradient(transparent 62%, rgb(245 183 0 / 0.55) 62%, rgb(245 183 0 / 0.55) 92%, transparent 92%);
+  .block-hard {
+    border: 2px solid #121212;
+    box-shadow: 4px 4px 0 0 #121212;
   }
-  .noise::after {
+  .press {
+    transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  }
+  .press:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 #121212;
+  }
+  .text-stroke {
+    -webkit-text-stroke: 2px #121212;
+    color: transparent;
+  }
+  .grain::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.09;
+    opacity: 0.07;
     mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
-  .num {
-    font-variant-numeric: tabular-nums;
-    font-family: var(--font-mono);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 }
 
@@ -201,3 +191,7 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* custom cursor is decorative; keep the native cursor for text entry */
+.custom-cursor body, .custom-cursor a, .custom-cursor button { cursor: none; }
+.custom-cursor input, .custom-cursor textarea, .custom-cursor select { cursor: text; }
