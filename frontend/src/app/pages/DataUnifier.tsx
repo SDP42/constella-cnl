@@ -1,5 +1,5 @@
 import { pct } from '@/lib/format'
-import { Card, DivDot, Loading, Page, Stat, useApi } from '../kit'
+import { Card, DivDot, Loading, Page, Stat, useApi, Reasoning } from '../kit'
 
 export default function DataUnifier() {
   const d = useApi<any>(['unify'], '/api/data/unification')
@@ -18,6 +18,7 @@ export default function DataUnifier() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_1.4fr]">
         <div className="space-y-4">
           <Card title="Matching rules" sub="GSTIN exact → PAN → fuzzy name in the same city">
+            <Reasoning how="GSTIN is the legal identity (confidence 1.0); PAN (characters 3–12 of GSTIN) catches the same entity registered in another state; otherwise names are normalised (legal suffixes, branch tags removed) and compared with token-set and transposition-tolerant ratios inside the same city. 86+ auto-match, 72–86 goes to the steward queue." why="Each division keeps its own partner master. Until 'Galaxy Tech Systems', 'GALAXY TS' and 'Galaxy Tech Systems - Pune' are one record, nobody can see the whole partner." />
             <ul className="space-y-2">
               {Object.entries(r.by_rule).map(([k, v]: any) => (
                 <li key={k} className="flex items-center justify-between text-sm"><span className="capitalize">{k.replace(/_/g, ' ')}</span><span className="num">{v}</span></li>

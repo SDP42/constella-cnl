@@ -4,7 +4,7 @@ import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip,
 import { Slider } from '@/components/ui/slider'
 import { api } from '@/lib/api'
 import { inr, pct } from '@/lib/format'
-import { Card, Loading, Page } from '../kit'
+import { Card, Loading, Page, Reasoning } from '../kit'
 import { CHART } from '../theme'
 
 const LABEL: Record<string, string> = {
@@ -65,6 +65,8 @@ export default function Pilot() {
                 </div>
               </Card>
               <Card title="Scale-or-stop gates">
+                <Reasoning how="Each open opportunity converts naturally with q = 1 − (1 − p)^(180/120) using the calibrated model probability. In the treatment group a rep acts with the chosen action rate and lifts conversion by a kind-specific uplift (solution 1.3, annuity 1.8). 300 Monte-Carlo runs give the means and 90% intervals; treatment vs control is the attributable uplift."
+                  why="'Would have bought anyway' is the classic argument against sales tools. A randomised holdout settles it: only the difference between the two groups is credited to Constella." />
                 <ol className="grid gap-2 md:grid-cols-2">
                   {r.decision.gates.map((g: any) => (
                     <li key={g.month} className="rounded-xl bg-white/70 p-3 text-sm">

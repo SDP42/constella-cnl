@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { inr, pct } from '@/lib/format'
-import { Card, DivDot, Loading, Page, useApi } from '../kit'
+import { Card, DivDot, Loading, Page, useApi, Reasoning } from '../kit'
 
 export default function Solutions() {
   const sols = useApi<any[]>(['solutions'], '/api/solutions')
@@ -51,6 +51,7 @@ export default function Solutions() {
                     </div>
                   ))}
                 </div>
+                <Reasoning how="Quantities scale with the partner's size: own headcount for enterprises/retailers, project throughput (annual tech spend ÷ ₹60 L) for SIs and resellers. Components the partner already buys are removed automatically." why="One PO across divisions, with the service plan attached at the start, is how a distributor becomes a solutions provider." />
                 <p className="mt-3 text-xs text-ink-soft">Annuity: {s.annuity.map((a: any) => `${a.label} (every ${a.period} mo)`).join(' · ')}</p>
               </Card>
             )}

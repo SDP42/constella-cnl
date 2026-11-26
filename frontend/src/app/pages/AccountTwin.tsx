@@ -3,7 +3,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { inr, pct, titleCase } from '@/lib/format'
-import { Bar, Card, DivDot, Loading, Page, Stat, useApi } from '../kit'
+import { Bar, Card, DivDot, Loading, Page, Stat, useApi, Reasoning } from '../kit'
 import { OppRow } from './Inbox'
 import { OpportunityDrawer } from '../OpportunityDrawer'
 import { CHART, DIV_COLORS_MAP, DIV_NAME } from '../theme'
@@ -51,6 +51,7 @@ export default function AccountTwin() {
             <Stat label="Credit headroom" value={inr(a.credit_headroom)} sub={`${a.avg_payment_days} avg payment days`} tone="#3f7d5c" />
           </div>
           <Card title="Whitespace" sub="What this partner is likely to buy next (gradient-boosted propensity, 120-day horizon)">
+            <Reasoning how="Probability that the partner places a first order in the category within 120 days, from the gradient-boosted model. 'Peers' = share of partners with the same type and industry who already buy it." why="Wallet share grows fastest where the partner already behaves like peers who buy more — that is the safest cross-sell conversation." />
             <div className="space-y-2">
               {whitespace.slice(0, 7).map((c: any) => (
                 <div key={c.category} className="grid grid-cols-[1fr_120px_42px] items-center gap-3 text-sm">

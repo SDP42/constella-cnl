@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar as RBar } from 'recharts'
 import { Slider } from '@/components/ui/slider'
 import { inr, pct, titleCase } from '@/lib/format'
-import { Card, Loading, Page, Stat, useApi } from '../kit'
+import { Card, Loading, Page, Stat, useApi, Reasoning } from '../kit'
 import { CHART, DIV_COLORS_MAP, DIV_NAME } from '../theme'
 
 function Fy29() {
@@ -70,6 +70,7 @@ export default function Insights() {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card title="Revenue & 6-month forecast" sub={x.forecast.method}>
+          <Reasoning how={`log(revenue) is fitted on a linear trend plus two Fourier seasonal harmonics with light ridge regularisation; the band is ±1.28σ of residuals. Back-tested on the last 4 months: MAPE ${pct(x.forecast.backtest_mape)}.`} why="Monthly B2B revenue is lumpy (tenders, festive season, project deliveries); an honest interval is more useful than a precise-looking line." />
           <div className="h-72">
             <ResponsiveContainer>
               <AreaChart data={series}>
@@ -127,6 +128,7 @@ export default function Insights() {
           </div>
         </Card>
         <Card title="Anomaly feed" sub="Weekly division revenue more than 2.5σ from its own baseline">
+          <Reasoning how="For each division, weekly revenue over the last 8 weeks is compared with the mean and standard deviation of the 32 weeks before; |z| ≥ 2.5 is flagged." why="Spikes reveal a deal worth replicating; drops reveal stock-outs, leakage to a competitor or a lost key partner — early enough to act." />
           {x.anomalies.length ? (
             <ul className="space-y-2">
               {x.anomalies.map((an: any, i: number) => (

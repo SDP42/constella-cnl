@@ -1,6 +1,6 @@
 import { Bar as RBar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { pct } from '@/lib/format'
-import { Card, Loading, Page, Stat, useApi } from '../kit'
+import { Card, Loading, Page, Stat, useApi, Reasoning } from '../kit'
 import { CHART } from '../theme'
 
 const NAMES: Record<string, string> = { constella_gbm: 'Constella GBM', popularity: 'Peer popularity', item_cf: 'Item-to-item CF', association_rules: 'Association rules' }
@@ -65,6 +65,7 @@ export default function ModelLab() {
           </div>
         </Card>
         <Card title="What drives a prediction" sub="Permutation importance on the test window">
+          <Reasoning how="Each feature is shuffled in turn on a 6,000-pair sample of the test window; the drop in average precision is its importance. The same importances × each pair's deviation from the median give the per-opportunity reason codes in the dossier." why="Reps act on recommendations they understand. Peer adoption, intent in notes and co-purchase lift dominating — rather than an opaque ID feature — is what makes the model explainable." />
           <div className="space-y-2">
             {m.feature_importance.slice(0, 10).map((f: any) => (
               <div key={f.feature} className="grid grid-cols-[180px_1fr_44px] items-center gap-3 text-sm">

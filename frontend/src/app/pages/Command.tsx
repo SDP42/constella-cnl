@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Bar as RBar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import CountUp from '@/components/reactbits/CountUp'
 import { inr, pct } from '@/lib/format'
-import { Bar, Card, KindPill, Loading, Page, Stat, useApi } from '../kit'
+import { Bar, Card, KindPill, Loading, Page, Stat, useApi, Reasoning } from '../kit'
 import { OppRow } from './Inbox'
 import { OpportunityDrawer } from '../OpportunityDrawer'
 import { CHART, DIV_COLORS_MAP, DIV_NAME, KIND } from '../theme'
@@ -62,6 +62,8 @@ export default function Command() {
                     <Bar value={v} max={Math.max(...(Object.values(x.by_kind) as number[]))} color={KIND[k]?.color} />
                   </div>
                 ))}
+                <Reasoning how="Kinds come from the opportunity ladder: cross-sell (new category), upsell (Essential→Pro with spend momentum), solution (part-built template), annuity (installed base without a service plan or a renewal due)."
+                  why="The problem statement asks to move from individual products to integrated solutions and annuity — this mix is the direct measure of that shift." />
                 <div className="mt-4 rounded-xl bg-ink/[0.03] p-3 text-xs text-ink-soft">
                   Escalation ladder: {Object.entries(x.escalations).map(([l, n]) => `L${l}: ${n}`).join(' · ')}
                 </div>
@@ -75,6 +77,7 @@ export default function Command() {
             </Card>
             <div className="space-y-4">
               <Card title="Rep capacity" sub="Open leads vs capacity — the router balances this automatically">
+                <Reasoning how="Utilisation = open opportunities led ÷ the rep's capacity. When a rep is full the router borrows the least-loaded rep of the same division nationally; when all are full the automation-assisted annuity desk takes first touch." why="CNL cannot add reps in proportion to its 5,000-SKU portfolio; load-aware routing is how coverage grows without headcount." />
                 <div className="max-h-80 space-y-2.5 overflow-y-auto pr-1">
                   {x.reps.slice(0, 20).map((r: any) => (
                     <div key={r.id} className="grid grid-cols-[1fr_90px_40px] items-center gap-3 text-sm">

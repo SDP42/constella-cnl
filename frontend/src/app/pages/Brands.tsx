@@ -1,5 +1,5 @@
 import { inr, pct } from '@/lib/format'
-import { Bar, Card, Loading, Page, useApi } from '../kit'
+import { Bar, Card, Loading, Page, useApi, Reasoning } from '../kit'
 
 export default function Brands() {
   const d = useApi<any[]>(['brands'], '/api/brands')
@@ -9,6 +9,7 @@ export default function Brands() {
       <p className="-mt-3 mb-5 max-w-2xl text-sm text-ink-soft">
         What every brand sells through CNL’s network, how fast it is growing and how many fitting partners have never bought it — the conversation CNL can have with Honeywell, Samsung or Infinova about co-marketing funds.
       </p>
+      <Reasoning how="Revenue and partners from the last 12 months of invoices by brand; growth vs the 12 months before; whitespace = partners in industries where the brand's categories are core needs who have not bought it." why="Brand principals fund co-marketing (MDF) where they see whitespace. CNL's FY29 plan needs brand business to rise from ~19% to 40% of revenue." />
       {!d.data ? <Loading rows={8} /> : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {d.data.map((b) => (
