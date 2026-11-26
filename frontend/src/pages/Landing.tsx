@@ -5,6 +5,10 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Aura } from '@/components/Aura'
 import { Glyph, GlyphRow, DIV_HEX, type DivCode } from '@/components/Glyph'
+import { AppPreview } from '@/components/landing/AppPreview'
+import { SiloMerge } from '@/components/landing/SiloMerge'
+import { Statement } from '@/components/landing/Statement'
+import { Timeline } from '@/components/landing/Timeline'
 import { WireTicker } from '@/components/landing/WireTicker'
 import CountUp from '@/components/reactbits/CountUp'
 import SpotlightCard from '@/components/reactbits/SpotlightCard'
@@ -19,14 +23,6 @@ const CHAPTERS = [
   { k: '01 · The network', short: 'Network', t: '', d: 'CNL reaches 10,000+ channel partners across India — resellers, system integrators, retailers and enterprises — through five product divisions.', stat: 'Mumbai HQ · 31+ branches · 25+ brands' },
   { k: '02 · The routes', short: 'Routes', t: 'Every city. Every division.', d: 'Each partner buys from several divisions, but each division sees only its own slice. Constella stitches every slice into one account twin.', stat: '24 cities · 600 sample partners · 1 golden record each' },
   { k: '03 · One partner', short: 'Zoom', t: 'Zoom into Pune.', d: 'TechNova Systems buys panels and PCs — but no cabling, hubs or AMC. Constella spots the missing Smart Classroom, routes it to the right owner and drafts the pitch.', stat: 'p = 0.58 · fits credit · 70/30 split credit' },
-]
-
-const STEPS: { k: string; t: string; d: string; div: DivCode }[] = [
-  { k: 'Model', t: 'Unify the partner', d: 'SAP B1, Tally, Zoho and Excel records stitched by GSTIN, PAN and fuzzy match into one account twin.', div: 'EB' },
-  { k: 'Detect', t: 'Predict the next solution', d: 'Gradient-boosted propensity, co-purchase lift, solution coverage — back-tested against three baselines.', div: 'HON' },
-  { k: 'Route', t: 'Give it an owner', d: 'One lead, assists on 70/30 split credit, overlap merge, an SLA ladder that ends in zero-touch nurture.', div: 'FMSG' },
-  { k: 'Act', t: 'Make yes easy', d: 'Copilot pitch, one-click bill of materials, DaaS when credit blocks, WhatsApp-native automation.', div: 'FMCT' },
-  { k: 'Prove', t: 'Earn the right to scale', d: 'Randomised holdout, uplift with confidence bands and month-2/3/4/6 scale-or-stop gates.', div: 'SVC' },
 ]
 
 const INVENTIONS: { t: string; d: string; div: DivCode; span?: string; big?: boolean }[] = [
@@ -168,6 +164,17 @@ export default function Landing() {
               ))}
             </div>
           </div>
+          {/* Pune zoom: the account twin surfaces from the map */}
+          <div className={`pointer-events-none absolute bottom-[14%] right-[6%] hidden w-80 rounded-2xl border border-white/15 bg-black/45 p-4 text-white backdrop-blur-xl transition-all duration-700 lg:block ${chapter === 2 ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-white/50">Account twin · Pune</p>
+            <p className="mt-1 text-lg font-semibold">TechNova Systems</p>
+            <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-white/10"><span className="bg-[#3e5c76]" style={{ width: '81%' }} /><span className="bg-[#6b4e71]" style={{ width: '19%' }} /></div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div><p className="text-white/50">Wallet share</p><p className="num text-base font-semibold">6%</p></div>
+              <div><p className="text-white/50">Next best</p><p className="font-semibold text-gold-bright">Smart Classroom</p></div>
+            </div>
+            <p className="mt-3 text-[11px] text-white/60">Missing: Honeywell cabling & hubs · display AMC · drone kits</p>
+          </div>
           {/* progress rail */}
           <div className="absolute right-5 top-1/2 hidden -translate-y-1/2 flex-col items-end gap-3 md:flex" aria-hidden>
             {CHAPTERS.map((c, i) => (
@@ -179,62 +186,31 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      <div aria-hidden className="h-48 bg-gradient-to-b from-night to-transparent" />
+      <Statement />
+      <div className="bg-night px-3 pb-10"><div className="mx-auto max-w-6xl"><WireTicker /></div></div>
+      <div aria-hidden className="h-40 bg-gradient-to-b from-night to-pearl" />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-3"><WireTicker /></div>
+      <SiloMerge />
 
-      {/* the problem */}
-      <section className="mx-auto max-w-6xl px-5 py-32" aria-labelledby="problem-h">
-        <div className="grid gap-12 md:grid-cols-12">
-          <div className="md:col-span-5">
-            <p className="label">The problem, in CNL’s words</p>
-            <h2 id="problem-h" className="reveal mt-4 text-[clamp(2.2rem,4.8vw,4rem)] font-semibold leading-[1.02]">Each team sees only its own colour.</h2>
-            <p className="reveal mt-6 text-lg leading-relaxed text-ink-soft">
-              Purchases are spread across product divisions. Nobody sees when several products together form a solution — and headcount cannot grow
-              with the portfolio.
-            </p>
-            <p className="label mt-8">Sources · CNL investor deck Q1 FY26 · Q2 FY27 earnings call, 29 Oct 2026</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:col-span-7 md:grid-cols-3">
-            {[
-              { v: '10,000+', l: 'channel partners', d: 'EB' },
-              { v: '5,000+', l: 'SKUs across 25+ brands', d: 'FMSG' },
-              { v: '5.31%', l: 'EBITDA margin, Q2 FY27', d: 'HON' },
-              { v: '₹6,000 Cr', l: 'FY29 revenue goal', d: 'FMCT' },
-              { v: '45 days', l: 'net working capital', d: 'SVC' },
-              { v: '₹3,195 Cr', l: 'BharatNet order — the shift to solutions', d: 'EB' },
-            ].map((b) => (
-              <div key={b.l} className="reveal pane lift flex aspect-[1/1.05] flex-col justify-between p-5">
-                <Glyph div={b.d} size={16} />
-                <div>
-                  <div className="text-[clamp(1.4rem,2.6vw,2.2rem)] font-semibold leading-none tracking-tight">{b.v}</div>
-                  <div className="mt-2 text-sm text-ink-soft">{b.l}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* journey */}
-      <section id="journey" className="mx-auto max-w-6xl px-5 pb-32" aria-labelledby="journey-h">
-        <p className="label">Signal → signed → renewed</p>
-        <h2 id="journey-h" className="reveal mt-4 text-[clamp(2.2rem,4.8vw,4rem)] font-semibold">Five moves, one solution.</h2>
-        <ol className="relative mt-14 space-y-3">
-          <span aria-hidden className="absolute bottom-6 left-[27px] top-6 w-[2px] rounded-full bg-gradient-to-b from-spec-eb via-spec-fmsg to-spec-svc opacity-60" />
-          {STEPS.map((st, i) => (
-            <li key={st.k} className="reveal pane lift relative grid items-center gap-4 p-5 pl-20 md:grid-cols-12">
-              <span className="absolute left-4 top-1/2 grid size-[26px] -translate-y-1/2 place-items-center rounded-full bg-white shadow"><Glyph div={st.div} size={14} /></span>
-              <div className="md:col-span-3">
-                <div className="num text-xs text-ink-soft">0{i + 1}</div>
-                <div className="text-3xl font-semibold tracking-tight">{st.k}</div>
-              </div>
-              <div className="text-lg font-medium md:col-span-3">{st.t}</div>
-              <p className="text-ink-soft md:col-span-6">{st.d}</p>
-            </li>
+      {/* by the numbers — editorial strip, not cards */}
+      <section className="mx-auto max-w-6xl px-5 py-24" aria-labelledby="numbers-h">
+        <h2 id="numbers-h" className="sr-only">Creative Newtech by the numbers</h2>
+        <div className="grid grid-cols-2 gap-y-10 border-y border-ink/10 py-10 md:grid-cols-6">
+          {[
+            ['10,000+', 'channel partners'], ['5,000+', 'SKUs · 25+ brands'], ['5.31%', 'EBITDA margin, Q2 FY27'],
+            ['45 days', 'net working capital'], ['₹3,195 Cr', 'BharatNet SI order'], ['₹6,000 Cr', 'FY29 revenue goal'],
+          ].map(([v, l], i) => (
+            <div key={l} className={`reveal px-4 ${i ? 'md:border-l md:border-ink/10' : ''}`}>
+              <div className="num text-[clamp(1.4rem,2.4vw,2.1rem)] font-semibold tracking-tight">{v}</div>
+              <div className="mt-1 text-xs text-ink-soft">{l}</div>
+            </div>
           ))}
-        </ol>
+        </div>
+        <p className="label mt-4">Sources · CNL investor deck Q1 FY26 · Q2 FY27 earnings call, 29 Oct 2026</p>
       </section>
+
+      <AppPreview />
+      <Timeline />
 
       {/* inventions */}
       <section id="inventions" className="mx-auto max-w-6xl px-5 pb-32" aria-labelledby="inv-h">
@@ -262,11 +238,11 @@ export default function Landing() {
       </section>
 
       {/* proof */}
-      <section id="proof" className="mx-auto max-w-6xl px-5 pb-32" aria-labelledby="proof-h">
-        <div className="glass iris rounded-[32px] p-8 md:p-12">
+      <section id="proof" className="bg-night px-5 py-28 text-white" aria-labelledby="proof-h">
+        <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2 id="proof-h" className="text-[clamp(2rem,4.2vw,3.5rem)] font-semibold">Running live, right now.</h2>
-            <p className="label">From the running API · synthetic CNL network</p>
+            <p className="font-mono text-[11px] uppercase tracking-widest text-white/50">From the running API · synthetic CNL network</p>
           </div>
           <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
             {[
@@ -279,9 +255,9 @@ export default function Landing() {
               { k: 'Model AUC · back-test', v: s?.auc, dec: 3 },
               { k: 'Entity-match precision', v: s?.resolution_precision, pct: true },
             ].map((m) => (
-              <div key={m.k}>
-                <dt className="label">{m.k}</dt>
-                <dd className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">
+              <div key={m.k} className="reveal border-t border-white/10 pt-4">
+                <dt className="font-mono text-[11px] uppercase tracking-widest text-white/50">{m.k}</dt>
+                <dd className="num mt-2 text-4xl font-semibold tracking-tight text-gold-bright md:text-5xl">
                   {m.v == null ? '—' : m.money ? inr(m.v, 1) : m.pct ? `${(m.v * 100).toFixed(1)}%` : m.dec ? m.v.toFixed(m.dec) : <CountUp to={m.v} separator="," duration={1.6} />}
                 </dd>
               </div>
@@ -291,7 +267,7 @@ export default function Landing() {
       </section>
 
       {/* seats */}
-      <section id="seats" className="mx-auto max-w-6xl px-5 pb-32" aria-labelledby="seats-h">
+      <section id="seats" className="mx-auto max-w-6xl px-5 py-32" aria-labelledby="seats-h">
         <h2 id="seats-h" className="reveal text-[clamp(2.2rem,4.8vw,4rem)] font-semibold">Take a seat.</h2>
         <p className="reveal mt-3 max-w-lg text-lg text-ink-soft">Six people, six jobs, one data model. Each seat signs in with its own role, territory and data permissions.</p>
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -313,7 +289,14 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-5 pb-12">
+      <section className="bg-night px-5 py-32 text-center text-white">
+        <p className="mx-auto max-w-4xl text-[clamp(2.4rem,6vw,5.5rem)] font-semibold leading-[1.02] tracking-tight">
+          Sell the <span className="spectrum-text italic">solution</span>.<br />Keep the <span className="spectrum-text italic">service</span>.
+        </p>
+        <button onClick={() => scrollToId('seats')} className="mt-10 rounded-full bg-gold-bright px-8 py-4 font-semibold text-ink transition-transform hover:scale-[1.04]">Open the workspace</button>
+      </section>
+
+      <footer className="mx-auto max-w-6xl px-5 py-10">
         <div className="glass flex flex-wrap items-center justify-between gap-4 rounded-3xl px-6 py-5 text-sm text-ink-soft">
           <span className="flex items-center gap-2"><GlyphRow size={8} gap={3} /> Constella — built for the Creative Newtech × E-Cell IIT Bombay hackathon</span>
           <span>Data is synthetic · company facts cited from CNL public filings</span>
