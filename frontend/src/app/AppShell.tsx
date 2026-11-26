@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity, BarChart3, Bot, Boxes, Building2, Clock, Command as CmdIcon, Database, FlaskConical, Gauge, Inbox, LogOut,
-  Bell, Fingerprint, Gavel, Keyboard, Landmark, Network, Radar, Repeat, Search, ShieldCheck, Sparkles, Tags, Trophy, Truck, Workflow,
+  Bell, BrainCircuit, Fingerprint, Gavel, Globe2, Keyboard, Landmark, Network, Radar, Repeat, Search, ShieldCheck, Sparkles, Tags, Trophy, Truck, Workflow,
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
@@ -27,10 +27,12 @@ const NAV: { group: string; items: NavItem[] }[] = [
     { to: '/app/annuity', label: 'Annuity ledger', icon: <Repeat className="size-4" />, roles: ['head', 'architect', 'rep'] },
   ] },
   { group: 'Intelligence', items: [
+    { to: '/app/territory', label: 'Territory twin', icon: <Globe2 className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/growth', label: 'Growth lab', icon: <Radar className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/insights', label: 'BI & forecast', icon: <BarChart3 className="size-4" />, roles: ['head', 'architect', 'steward'] },
     { to: '/app/brands', label: 'Brand portal', icon: <Tags className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/graph', label: 'Product universe', icon: <Network className="size-4" />, roles: ['rep', 'head', 'architect', 'steward'] },
+    { to: '/app/learning', label: 'Learning loop', icon: <BrainCircuit className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/model', label: 'Model lab', icon: <FlaskConical className="size-4" />, roles: ['rep', 'head', 'architect', 'steward'] },
     { to: '/app/pilot', label: 'Pilot lab', icon: <Activity className="size-4" />, roles: ['head'] },
   ] },
