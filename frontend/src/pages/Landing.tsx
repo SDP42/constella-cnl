@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom'
 import { Aura } from '@/components/Aura'
 import { Glyph, GlyphRow, DIV_HEX, type DivCode } from '@/components/Glyph'
 import { AppPreview } from '@/components/landing/AppPreview'
-import { ConstellationStory } from '@/components/landing/ConstellationStory'
-import { OrbitHero } from '@/components/landing/OrbitHero'
+import { Brief } from '@/components/landing/Brief'
+import { FivePoints } from '@/components/landing/FivePoints'
 import CountUp from '@/components/reactbits/CountUp'
 import { api, login } from '@/lib/api'
 import { homeFor, type Role } from '@/lib/auth'
@@ -110,7 +110,7 @@ export default function Landing() {
             <span className="text-[17px] font-semibold tracking-tight">Constella</span>
           </a>
           <nav className="hidden items-center gap-1 text-sm md:flex">
-            {[['flight', 'Network'], ['journey', 'How it works'], ['inventions', 'Inventions'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
+            {[['flight', 'Network'], ['brief', 'The brief'], ['journey', 'Our answer'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
               <button key={id} onClick={() => scrollToId(id)} className="rounded-full px-3.5 py-1.5 text-ink-soft transition-colors hover:bg-white/70 hover:text-ink">
                 {l}
               </button>
@@ -122,11 +122,8 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* real NASA footage, scroll-scrubbed: orbit → India */}
-      <OrbitHero />
-
       {/* cinematic 3D flight through the partner network (sticky stage, scroll-scrubbed) */}
-      <section id="flight" ref={flightRef} className="relative h-[400vh] bg-night" aria-label="Flight through CNL's partner network">
+      <section id="flight" ref={flightRef} className="relative h-[280vh] bg-night" aria-label="Flight through CNL's partner network">
         <div className="sticky top-0 h-dvh w-full overflow-hidden">
           {net.data && (
             <div ref={globeWrap} className="absolute inset-0 will-change-[filter,transform,opacity]">
@@ -185,7 +182,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      <ConstellationStory annuity={stats.data?.annuity_value} />
+      <Brief />
+
+      <FivePoints s={stats.data} />
 
       <AppPreview />
 
