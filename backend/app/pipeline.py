@@ -83,6 +83,7 @@ def build(verbose: bool = True) -> dict[str, Any]:
                              settings.eval_window_days, with_labels=False)
         live["p"] = model.clf.predict_proba(live[FEATURES])[:, 1]
         state.live, state.cooc = live, ctx
+        state.cache = {}
         b = OpportunityBuilder(model, f["accounts"], f["products"], f["tx"], f["assets"], f["interactions"],
                                settings.demo_now)
         b.build(live)
@@ -124,6 +125,7 @@ def warm(verbose: bool = True) -> None:
         live["p"] = model.clf.predict_proba(live[FEATURES])[:, 1]
         run = s.exec(select(ModelRun).order_by(ModelRun.id.desc())).first()
         state.model, state.metrics, state.live, state.cooc = model, model.metrics, live, ctx
+        state.cache = {}
         state.resolution = (run.metrics or {}).get("resolution", {}) if run else {}
     if verbose:
         print("[constella] warmed model from existing database")

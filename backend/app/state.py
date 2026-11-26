@@ -18,6 +18,7 @@ class AppState:
         self.resolution: dict[str, Any] = {}
         self.live: Any = None  # live whitespace snapshot (pandas) scored by the model
         self.cooc: Any = None  # co-purchase matrices (cos, lift, conf)
+        self.cache: dict[str, Any] = {}  # BI / prediction results, cleared on rebuild
 
     @property
     def now(self) -> datetime:
