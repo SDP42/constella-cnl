@@ -291,3 +291,18 @@ COMPANY_SUFFIX = {
     "retailer": ["Electronics", "Gadget Hub", "Camera House", "Digital Store", "Mobile Point"],
     "sub_distributor": ["Distributors", "Trading Co", "Agencies", "Marketing", "Enterprises"],
 }
+
+
+# Brand principal schemes (illustrative): quarterly turnover slabs that pay a back-end rebate.
+BRAND_SCHEMES: list[dict[str, Any]] = [
+    {"id": "hon_q3", "brand": "Honeywell", "name": "Honeywell Winter Clean-Air Scheme", "period_days": 90,
+     "slabs": [[300000, 0.02], [800000, 0.035], [1500000, 0.05]]},
+    {"id": "vs_q3", "brand": "ViewSonic", "name": "ViewSonic Classroom Accelerator", "period_days": 90,
+     "slabs": [[500000, 0.015], [1200000, 0.03], [2500000, 0.045]]},
+    {"id": "sam_q3", "brand": "Samsung", "name": "Samsung Display Partner Programme", "period_days": 90,
+     "slabs": [[600000, 0.01], [1500000, 0.025], [3000000, 0.04]]},
+    {"id": "cpc_q3", "brand": "CyberPowerPC", "name": "CyberPowerPC AI Workstation Launch", "period_days": 90,
+     "slabs": [[400000, 0.03], [1000000, 0.05]]},
+    {"id": "lex_q3", "brand": "Lexar", "name": "Lexar Memory Volume Bonus", "period_days": 90,
+     "slabs": [[100000, 0.02], [300000, 0.04]]},
+]

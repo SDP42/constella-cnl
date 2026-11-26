@@ -289,3 +289,20 @@ class JobRun(SQLModel, table=True):
     finished_at: NaiveDatetime | None = None
     status: str = "ok"
     summary: str = ""
+
+
+class DealRequest(SQLModel, table=True):
+    """Deal desk: a discount / special-price request with an approval matrix and audit trail."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    opportunity_id: int = Field(foreign_key="opportunity.id", index=True)
+    requested_by: str
+    requested_role: str
+    discount_pct: float
+    reason: str
+    status: str = Field(default="pending", index=True)  # pending | approved | rejected | auto_approved
+    approver_role: str
+    decided_by: str | None = None
+    decided_at: NaiveDatetime | None = None
+    created_at: NaiveDatetime
+    waterfall: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
