@@ -151,3 +151,33 @@ def intent(body: IntentIn, _: Principal = Depends(current_principal)) -> dict[st
     from app.ml.semantic import intents
 
     return {"text": body.text, "intents": intents(body.text)}
+
+
+# ------------------------------------------------------------------ Work: beat planner · Money: collections
+@router.get("/work/beat")
+def beat(rep_id: int | None = None, s: Session = Depends(get_session), p: Principal = Depends(current_principal)) -> dict[str, Any]:
+    from datetime import datetime as _dt
+
+    from app.models import OPEN_STATUSES, Opportunity, SalesRep
+    from app.services.fieldmoney import beat_plan
+
+    rid = rep_id or p.rep_id
+    if rid is None:  # heads/architects: show the busiest rep's day
+        rid = max(((r.id, len(s.exec(select(Opportunity.id).where(Opportunity.lead_rep_id == r.id)).all())) for r in s.exec(select(SalesRep)).all()), key=lambda x: x[1])[0]
+    if not p.can("read:all") and p.rep_id != rid:
+        raise HTTPException(403, "you can only plan your own day")
+    rep = s.get(SalesRep, rid)
+    opps = [o.model_dump() for o in s.exec(select(Opportunity).where(Opportunity.lead_rep_id == rid)).all() if o.status in OPEN_STATUSES]
+    accs = {a.id: a.model_dump() for a in s.exec(select(Account)).all()}
+    start = _dt.combine(state.now.date(), _dt.min.time()).replace(hour=10)
+    return {"rep": {"id": rep.id, "name": rep.name, "division": rep.division_code, "region": rep.region}, **beat_plan(rep.model_dump(), opps, accs, start)}
+
+
+@router.get("/money/collections")
+def collections(s: Session = Depends(get_session), _: Principal = Depends(current_principal)) -> dict[str, Any]:
+    from app.services.fieldmoney import collections as coll
+
+    def build() -> dict[str, Any]:
+        f = _frames(s)
+        return coll(f["tx"], f["accounts"], state.now.date())
+    return _c("collections", build)
