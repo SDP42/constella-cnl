@@ -231,3 +231,9 @@ main [class*='grid-cols-'] > *, main .grid > * { min-width: 0; }
   body { background: #fff; }
   .pane { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
 }
+
+/* MapLibre: keep attribution compact until hovered; dark popups */
+.maplibregl-ctrl-attrib.maplibregl-compact:not(:hover) .maplibregl-ctrl-attrib-inner { display: none; }
+.maplibregl-ctrl-attrib.maplibregl-compact { font-size: 10px; }
+.poi-pop .maplibregl-popup-content { background: #0c0a09; color: #fff; border-radius: 12px; padding: 6px 10px; font-size: 11px; }
+.poi-pop .maplibregl-popup-tip { display: none; }
