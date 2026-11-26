@@ -3,7 +3,7 @@
 ```
 Browser ──► Vercel (React static build)
               ├─ /api/*  ──rewrite──►  Render web service (FastAPI, lite mode)
-              └─ wss://constella-api.onrender.com/api/ws/live   (live feed, direct)
+              └─ wss://constella-cnl.onrender.com/api/ws/live   (live feed, direct)
 ```
 
 ## Why it fits Render's free plan (512 MB RAM, 0.1 CPU)
@@ -30,17 +30,17 @@ Free-plan caveats:
 
 1. Push the repo to GitHub (already at `SDP42/constella-cnl`).
 2. In Render, go to **New → Blueprint**, pick the repo, and Render reads [`render.yaml`](../render.yaml).
-3. It creates `constella-api` (free, region Singapore) with:
+3. It creates `constella-cnl` (free, region Singapore) with:
    - build: `pip install uv && uv sync --frozen --no-dev && uv run python -m app.pipeline`
    - start: `.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`
    - env: `CONSTELLA_LITE=true`, a generated `CONSTELLA_SECRET_KEY`, `PYTHON_VERSION=3.12.7`, and optionally `ANTHROPIC_API_KEY`
-4. Check `https://constella-api.onrender.com/api/health`. If Render gives a different hostname, use it in step 2 below.
+4. Check `https://constella-cnl.onrender.com/api/health`. If Render gives a different hostname, use it in step 2 below.
 
 ## 2. Frontend on Vercel
 
 1. In Vercel, go to **Add New → Project**, import the repo, and set **Root Directory = `frontend`**. Vercel reads [`frontend/vercel.json`](../frontend/vercel.json).
 2. In `vercel.json`, the rewrite sends `/api/*` to the Render URL (edit the hostname if yours differs). Calls stay same-origin, so no CORS setup is needed.
-3. Environment variable (Production): `VITE_WS_URL = wss://constella-api.onrender.com/api/ws/live`. Vercel cannot proxy WebSockets; the live feed is optional and backs off when the API is asleep.
+3. Environment variable (Production): `VITE_WS_URL = wss://constella-cnl.onrender.com/api/ws/live`. Vercel cannot proxy WebSockets; the live feed is optional and backs off when the API is asleep.
 4. Deploy. Then add the Vercel URL to `CONSTELLA_CORS_ORIGINS` on Render if you ever call the API directly (via `VITE_API_URL`).
 
 ## 3. Keeping the demo awake (optional)

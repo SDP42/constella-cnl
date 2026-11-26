@@ -3,7 +3,7 @@
 # free instance only loads them at start-up. Lite mode skips the optional embedding model (TF-IDF fallback).
 services:
   - type: web
-    name: constella-api
+    name: constella-cnl
     runtime: python
     plan: free
     region: singapore

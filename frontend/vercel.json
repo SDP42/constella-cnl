@@ -5,7 +5,7 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://constella-api.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://constella-cnl.onrender.com/api/:path*" },
     { "source": "/((?!api/|assets/|frames/).*)", "destination": "/index.html" }
   ],
   "headers": [
