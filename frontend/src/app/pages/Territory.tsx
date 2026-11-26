@@ -1,5 +1,5 @@
-import * as maplibregl from 'maplibre-gl'
-import type { GeoJSONSource, Map as MLMap } from 'maplibre-gl'
+import { maplibregl } from '@/lib/maplibre'
+import type { GeoJSONSource, MLMap } from '@/lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useMutation } from '@tanstack/react-query'
 import { Box, Building2, Globe2, Layers, Loader2, Moon, Mountain, Radar, Satellite, ScanSearch } from 'lucide-react'

@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: { exclude: ['maplibre-gl'] },
+  worker: { format: 'es' },
   build: {
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
