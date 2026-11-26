@@ -1,0 +1,217 @@
+import { QuadraticBezierLine } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Bloom, EffectComposer } from '@react-three/postprocessing'
+import { Suspense, useMemo, useRef } from 'react'
+import * as THREE from 'three'
+
+/**
+ * Night-side globe facing India. Scroll progress (0..1) zooms the camera from orbit to India to Pune.
+ * Real geometry: partner cities + counts come from /api/public/network (aggregate, no PII).
+ */
+
+export interface GlobeCity { city: string; lat: number; lng: number; partners: { hero: boolean }[] }
+
+const R = 2
+// rough India outline (lng, lat) — enough for a dot-matrix landmass at this zoom
+const INDIA: [number, number][] = [
+  [68.4, 23.6], [69.2, 22.3], [70.5, 20.9], [72.6, 21.1], [72.8, 19.0], [73.4, 16.0], [74.1, 14.8], [74.8, 12.9], [75.6, 11.3],
+  [76.3, 9.5], [77.5, 8.1], [78.2, 8.9], [79.3, 10.3], [79.9, 12.0], [80.3, 13.6], [80.1, 15.5], [81.3, 16.4], [82.3, 17.0],
+  [84.0, 18.3], [85.5, 19.6], [87.0, 20.7], [88.1, 21.6], [89.0, 21.8], [88.7, 24.3], [88.1, 26.4], [89.8, 26.0], [92.0, 25.0],
+  [92.6, 23.6], [93.4, 24.0], [94.2, 25.8], [95.3, 26.9], [96.0, 27.6], [95.0, 28.3], [93.0, 27.9], [91.6, 27.8], [89.5, 28.0],
+  [88.1, 27.6], [86.0, 27.8], [84.1, 28.6], [81.0, 30.2], [79.0, 31.4], [78.7, 32.5], [78.9, 34.3], [77.8, 35.5], [76.0, 35.9],
+  [74.0, 34.8], [73.8, 33.6], [74.6, 32.0], [73.8, 30.0], [71.9, 28.0], [70.2, 27.4], [69.5, 26.6], [70.0, 25.0], [68.4, 23.6],
+]
+
+function inPoly(x: number, y: number, poly: [number, number][]) {
+  let inside = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]
+    const [xj, yj] = poly[j]
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
+}
+
+export function latLng(lat: number, lng: number, r = R) {
+  const phi = ((90 - lat) * Math.PI) / 180
+  const theta = ((lng + 180) * Math.PI) / 180
+  return new THREE.Vector3(-r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta))
+}
+
+const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+const seg = (p: number, a: number, b: number) => ease(Math.min(1, Math.max(0, (p - a) / (b - a))))
+
+const atmoVert = `varying vec3 vN; varying vec3 vP; void main(){ vN = normalize(normalMatrix*normal); vec4 mv = modelViewMatrix*vec4(position,1.0); vP = mv.xyz; gl_Position = projectionMatrix*mv; }`
+const atmoFrag = `uniform vec3 uC; uniform float uI; varying vec3 vN; varying vec3 vP; void main(){ float f = pow(1.0 - abs(dot(normalize(-vP), vN)), 3.0); gl_FragColor = vec4(uC, f*uI); }`
+
+function Earth({ cities, progress }: { cities: GlobeCity[]; progress: React.MutableRefObject<number> }) {
+  const group = useRef<THREE.Group>(null)
+  const arcs = useRef<any[]>([])
+  const lights = useRef<THREE.Group>(null)
+  const pune = useRef<THREE.Mesh>(null)
+
+  // orient so India (22N, 80E) faces the camera (+z)
+  const baseQ = useMemo(() => new THREE.Quaternion().setFromUnitVectors(latLng(22, 80).normalize(), new THREE.Vector3(0, 0, 1)), [])
+  const puneQ = useMemo(() => new THREE.Quaternion().setFromUnitVectors(latLng(18.0, 74.6).normalize(), new THREE.Vector3(0, 0, 1)), [])
+  const q = useMemo(() => new THREE.Quaternion(), [])
+
+  const land = useMemo(() => {
+    const pts: number[] = []
+    for (let lat = 6; lat <= 37; lat += 0.42) {
+      for (let lng = 67; lng <= 97.5; lng += 0.42 / Math.cos((lat * Math.PI) / 180)) {
+        if (inPoly(lng, lat, INDIA)) pts.push(...latLng(lat, lng, R * 1.001).toArray())
+      }
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    return g
+  }, [])
+
+  const graticule = useMemo(() => {
+    // faint world dot-sphere so the globe reads as a planet, not a ball
+    const pts: number[] = []
+    const n = 9000
+    const golden = Math.PI * (3 - Math.sqrt(5))
+    for (let i = 0; i < n; i++) {
+      const y = 1 - (i / (n - 1)) * 2
+      const rad = Math.sqrt(1 - y * y)
+      const th = golden * i
+      pts.push(Math.cos(th) * rad * R * 1.0005, y * R * 1.0005, Math.sin(th) * rad * R * 1.0005)
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    return g
+  }, [])
+
+  const hub = useMemo(() => latLng(19.08, 72.88, R * 1.003), [])
+  const arcData = useMemo(() => cities.filter((c) => c.city !== 'Mumbai').map((c) => {
+    const end = latLng(c.lat, c.lng, R * 1.003)
+    const mid = hub.clone().add(end).multiplyScalar(0.5)
+    const lift = 1 + hub.distanceTo(end) * 0.35
+    mid.normalize().multiplyScalar(R * lift)
+    return { end, mid }
+  }), [cities, hub])
+
+  useFrame((state, dt) => {
+    const p = progress.current
+    const t = state.clock.elapsedTime
+    if (group.current) {
+      const drift = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.sin(t * 0.08) * 0.25 * (1 - seg(p, 0.2, 0.5)), 0))
+      q.copy(baseQ).slerp(puneQ, seg(p, 0.55, 0.9))
+      group.current.quaternion.copy(drift).multiply(q)
+    }
+    const arcOn = seg(p, 0.25, 0.5)
+    arcs.current.forEach((l, i) => {
+      if (!l) return
+      l.visible = arcOn > 0.01
+      l.material.transparent = true
+      l.material.opacity = arcOn * 0.85
+      l.material.dashOffset -= dt * (0.4 + (i % 4) * 0.1)
+    })
+    lights.current?.children.forEach((c, i) => {
+      const s = 1 + 0.25 * Math.sin(t * 2 + i)
+      c.scale.setScalar(s * (1 - 0.45 * seg(p, 0.4, 0.9)))
+    })
+    if (pune.current) {
+      const k = (t * 0.6) % 1
+      pune.current.scale.setScalar(0.01 + k * 0.07 * (0.3 + seg(p, 0.55, 0.85)))
+      ;(pune.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * (0.3 + seg(p, 0.55, 0.85) * 0.7)
+    }
+  })
+
+  const punePos = latLng(18.52, 73.86, R * 1.004)
+  return (
+    <group ref={group}>
+      <mesh>
+        <sphereGeometry args={[R, 96, 96]} />
+        <meshStandardMaterial color="#231d17" roughness={0.9} metalness={0.05} />
+      </mesh>
+      <points geometry={graticule}>
+        <pointsMaterial size={0.012} color="#6b5d4a" transparent opacity={0.45} sizeAttenuation />
+      </points>
+      <points geometry={land}>
+        <pointsMaterial size={0.02} color="#d9b46a" transparent opacity={0.85} sizeAttenuation />
+      </points>
+      <group ref={lights}>
+        {cities.map((c) => {
+          const v = latLng(c.lat, c.lng, R * 1.004)
+          const r = 0.007 + Math.sqrt(c.partners.length) * 0.0018
+          return (
+            <mesh key={c.city} position={v}>
+              <sphereGeometry args={[r, 16, 16]} />
+              <meshBasicMaterial color="#ffd27a" toneMapped={false} />
+            </mesh>
+          )
+        })}
+      </group>
+      <mesh ref={pune} position={punePos} quaternion={new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), punePos.clone().normalize())}>
+        <ringGeometry args={[0.8, 1, 64]} />
+        <meshBasicMaterial color="#ffd27a" transparent side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      {arcData.map((a, i) => (
+        <QuadraticBezierLine key={i} ref={(el) => { arcs.current[i] = el }} start={hub} end={a.end} mid={a.mid}
+          color="#f5b700" lineWidth={1.4} dashed dashScale={8} dashSize={0.5} gapSize={0.35} transparent opacity={0} />
+      ))}
+      {/* atmosphere */}
+      <mesh scale={1.06}>
+        <sphereGeometry args={[R, 64, 64]} />
+        <shaderMaterial vertexShader={atmoVert} fragmentShader={atmoFrag} transparent side={THREE.BackSide} depthWrite={false}
+          uniforms={{ uC: { value: new THREE.Color('#e8a64e') }, uI: { value: 0.75 } }} />
+      </mesh>
+      <mesh scale={1.002}>
+        <sphereGeometry args={[R, 64, 64]} />
+        <shaderMaterial vertexShader={atmoVert} fragmentShader={atmoFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending}
+          uniforms={{ uC: { value: new THREE.Color('#c98a3a') }, uI: { value: 0.35 } }} />
+      </mesh>
+    </group>
+  )
+}
+
+function Stars() {
+  const g = useMemo(() => {
+    const pts: number[] = []
+    for (let i = 0; i < 1800; i++) {
+      const v = new THREE.Vector3().randomDirection().multiplyScalar(30 + Math.random() * 30)
+      pts.push(v.x, v.y, v.z)
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    return geo
+  }, [])
+  return <points geometry={g}><pointsMaterial size={0.08} color="#e7dcc8" transparent opacity={0.6} /></points>
+}
+
+function CameraRig({ progress }: { progress: React.MutableRefObject<number> }) {
+  const smooth = useRef(0)
+  useFrame((state, dt) => {
+    smooth.current += (progress.current - smooth.current) * Math.min(1, dt * 2.4)
+    const p = smooth.current
+    const z = THREE.MathUtils.lerp(8.2, 4.4, seg(p, 0.05, 0.45)) - 1.15 * seg(p, 0.55, 0.9)
+    const x = -2.1 * (1 - seg(p, 0.05, 0.45)) - 0.9 * seg(p, 0.05, 0.45)
+    const y = 0.15
+    const cam = state.camera
+    cam.position.lerp(new THREE.Vector3(x + state.pointer.x * 0.15, y + state.pointer.y * 0.1, z), Math.min(1, dt * 4))
+    cam.lookAt(x * 0.55, y * 0.6, 0)
+  })
+  return null
+}
+
+export function Globe({ cities, progress, className }: { cities: GlobeCity[]; progress: React.MutableRefObject<number>; className?: string }) {
+  return (
+    <div className={className}>
+      <Canvas dpr={[1, 2]} camera={{ position: [-2.1, 0.15, 8.2], fov: 35 }} gl={{ antialias: true }}>
+        <color attach="background" args={['#0c0a09']} />
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.55} />
+          <directionalLight position={[-6, 3, 4]} intensity={1.6} color="#ffe2b8" />
+          <Stars />
+          <Earth cities={cities} progress={progress} />
+          <CameraRig progress={progress} />
+          <EffectComposer multisampling={0}>
+            <Bloom mipmapBlur intensity={0.7} luminanceThreshold={0.62} luminanceSmoothing={0.2} />
+          </EffectComposer>
+        </Suspense>
+      </Canvas>
+    </div>
+  )
+}
