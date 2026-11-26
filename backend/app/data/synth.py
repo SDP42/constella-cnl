@@ -97,7 +97,10 @@ def _gstin(r: random.Random, region: str) -> tuple[str, str]:
     pan = "".join(r.choice(letters) for _ in range(3)) + "P" + r.choice(letters) + \
         f"{r.randint(1000, 9999)}" + r.choice(letters)
     state = r.choice(C.STATE_CODES[region])
-    return f"{state}{pan}1Z{r.choice('0123456789')}", pan
+    from app.services.analytics import gstin_check_digit
+
+    body = f"{state}{pan}1Z"
+    return body + gstin_check_digit(body), pan
 
 
 def _name_variant(r: random.Random, name: str, city: str) -> str:
@@ -386,7 +389,8 @@ def build_world() -> World:
             w.source_records.append({
                 "division_code": d, "system": systems[d],
                 "raw_name": a["name"] if d == divs[0] else _name_variant(r, a["name"], a["city"]),
-                "raw_gstin": None if missing_gst else a["gstin"],
+                "raw_gstin": None if missing_gst else (a["gstin"][:14] + ("X" if a["gstin"][14] != "X" else "Y")
+                                                      if r.random() < 0.05 else a["gstin"]),  # ~5% keying errors
                 "phone": phone, "pincode": f"{a['_pin']}{r.randint(0, 99):03d}"[:6], "city": a["city"],
                 "truth_account_id": a["id"],
             })

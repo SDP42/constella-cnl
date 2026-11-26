@@ -306,3 +306,28 @@ class DealRequest(SQLModel, table=True):
     decided_at: NaiveDatetime | None = None
     created_at: NaiveDatetime
     waterfall: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class Feedback(SQLModel, table=True):
+    """Rep feedback on a recommendation — labels for retraining and the pilot's 'signal quality' gate."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    opportunity_id: int = Field(foreign_key="opportunity.id", index=True)
+    actor: str
+    useful: bool
+    reason: str | None = None
+    kind: str
+    ts: NaiveDatetime
+
+
+class ErasureRequest(SQLModel, table=True):
+    """DPDP Act 2023 data-principal request (erasure / correction) and its handling status."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    account_id: int
+    contact: str
+    request: str  # erasure | correction | access
+    status: str = "completed"
+    handled_by: str
+    ts: NaiveDatetime
+    note: str | None = None
