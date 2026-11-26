@@ -98,3 +98,31 @@ Xvantage and TD SYNNEX Digital Bridge (URLs in the main README).
 4. **Ownership is a contract**: one lead, assists with split credit, SLAs, and an escalation ladder.
 5. **Fit existing workflows**: CSV/ERP ingest, WhatsApp/email drafts, weekly review export. No new partner portal required.
 6. **Prove it**: time-split back-tests for the model, a randomised holdout for the business.
+
+---
+
+## 7. Update — latest disclosures (Q2 FY27 earnings call, 29 Oct 2026)
+
+Source: [Q2 FY27 earnings call transcript (NSE)](https://nsearchives.nseindia.com/corporate/CREATIVE_03112026073058_Transcript_CreativeNewtech-Oct29-2026.pdf);
+clients list from the [18th Annual Report](https://creativenewtech.com/wp-content/uploads/2025/01/1-18th-Annual-Report.pdf);
+AT&T licensing via [SAHI news](https://www.sahi.com/news/creative-newtech-signs-strategic-licensing-deal-with-at-t-for-tech-infrastructure).
+
+| Theme | What CNL disclosed | What it means for Constella |
+|---|---|---|
+| Financials | Q2 FY27 revenue ₹752.14 Cr, EBITDA ₹40.11 Cr (**5.31%**, up from 4.04%), PAT margin 3.44%; net working-capital days **45** (from 75 in FY26) | Margin and cash-cycle aware ranking (value-at-stake) is the right objective; track WC days per opportunity |
+| Target | **₹6,000 Cr revenue by FY29**, brand business to rise from 19% to **40%**, brand PAT 10–11% | "Brand mix" is a first-class KPI in the BI layer; cross-sell should push licensed/own brands |
+| System integration | Advance work order from **BSNL for BharatNet Middle Mile (Odisha), ≈ ₹3,195 Cr** (≈ ₹1,700 Cr capex over 3.5 yrs + opex); a ₹50 Cr government data centre (SNOC); **Super Micro** tie-up for private data-centre deals | Solution templates must include data-centre / network infrastructure and project-style (milestone) deals |
+| Surveillance & safety | Proposed acquisition of **Infinova India** (smart-city / airport / border cameras; Mumbai Smart City uses it; STQC certification); **Ravel Electronics** for fire & life safety | New solution: *Smart City & Campus Security* (surveillance + fire safety + cabling + AMC) |
+| AI | **CyberPowerPC repositioned as AI workstation / "AI in a box"** for BFSI customers that won't send data to the cloud | New solution: *On-prem AI Pod* (AI workstation + Super Micro server + storage + AMC) |
+| Drones | **Drona Aviation** (drone-based STEM education), **Jupiter Electric Mobility** | New solution: *Drone STEM Lab* for schools |
+| Own brand | **WOZOYO** global consumer brand (US first, India launch with air purifiers & docking stations); Amazon "Rising Global Stars"; ₹45–50 Cr first-year target; sold via **Blinkit, Swiggy, Amazon** | Quick-commerce & marketplace partners as account types; bundling rule "Honeywell + WOZOYO" |
+| Bundling tactic (CMD) | "If you want Honeywell air purifiers, you will also have to stock WOZOYO accessories" | Exactly the cross-sell leverage Constella automates — a *Brand Bundle Lever* feature |
+| Licensing | New **AT&T** brand licensing for technology infrastructure categories; Honeywell licence across 38 countries | Licensed brands carry higher margin — prioritise in scoring |
+| Customers named | Reliance, Amazon, Flipkart, Croma, Teleperformance, Jio Studios, Nykaa | Seed demo accounts with these archetypes (retail chains, marketplaces, BPO enterprise, media) |
+| Risks mentioned | Middle-East demand pressure from the war, rising freight, government-project perception | Leakage/risk signals and scenario planning in the BI layer |
+
+### New features this research drives
+1. **Brand Bundle Lever** — when a partner wants a scarce/high-demand brand (Honeywell), recommend the attach bundle (WOZOYO, AMC) and quantify it.
+2. **Project-style solution deals** with milestone billing (BharatNet-like), DC/SNOC, surveillance, drone labs, on-prem AI pods.
+3. **Brand Principal Portal** — show each brand (Honeywell, Samsung, Infinova…) its sell-through, whitespace and co-marketing ROI across CNL's network.
+4. **FY29 Path** BI view — revenue run-rate vs the ₹6,000 Cr goal and brand-mix vs 40% target, with scenario sliders.
