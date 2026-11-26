@@ -108,6 +108,27 @@ def public_stats(s: Session = Depends(get_session)) -> dict[str, Any]:
     }
 
 
+@router.get("/public/network")
+def public_network(s: Session = Depends(get_session)) -> dict[str, Any]:
+    """Aggregate-only geometry for the landing-page 3D network: no names, GSTINs or contacts."""
+    accs = s.exec(select(Account)).all()
+    spend: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    for aid, div, amt in s.exec(select(Transaction.account_id, Transaction.division_code, Transaction.amount)).all():
+        spend[aid][div] += amt
+    cities: dict[str, dict[str, Any]] = {}
+    for a in accs:
+        c = cities.setdefault(a.city, {"city": a.city, "region": a.region, "lat": C.CITIES[a.city][1],
+                                        "lng": C.CITIES[a.city][2], "partners": []})
+        sp = spend.get(a.id, {})
+        total = sum(sp.values())
+        c["partners"].append({
+            "hero": a.id == 1, "total": round(total),
+            "mix": [round(sp.get(d, 0) / total, 3) if total else 0 for d in ("EB", "HON", "FMSG", "FMCT", "SVC")],
+        })
+    out = sorted(cities.values(), key=lambda c: -len(c["partners"]))
+    return {"cities": out, "divisions": ["EB", "HON", "FMSG", "FMCT", "SVC"]}
+
+
 # ------------------------------------------------------------------ command center
 @router.get("/dashboard/head")
 def head_dashboard(s: Session = Depends(get_session), p: Principal = Depends(require("read:all"))) -> dict[str, Any]:
