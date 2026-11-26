@@ -8,6 +8,7 @@ import { Glyph, GlyphRow, DIV_HEX, type DivCode } from '@/components/Glyph'
 import { AppPreview } from '@/components/landing/AppPreview'
 import { Brief } from '@/components/landing/Brief'
 import { FivePoints } from '@/components/landing/FivePoints'
+import { SolutionReel } from '@/components/landing/SolutionReel'
 import CountUp from '@/components/reactbits/CountUp'
 import { api, login } from '@/lib/api'
 import { homeFor, type Role } from '@/lib/auth'
@@ -110,7 +111,7 @@ export default function Landing() {
             <span className="text-[17px] font-semibold tracking-tight">Constella</span>
           </a>
           <nav className="hidden items-center gap-1 text-sm md:flex">
-            {[['flight', 'Network'], ['brief', 'The brief'], ['journey', 'Our answer'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
+            {[['brief', 'The brief'], ['solutions', 'Solutions'], ['journey', 'Our answer'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
               <button key={id} onClick={() => scrollToId(id)} className="rounded-full px-3.5 py-1.5 text-ink-soft transition-colors hover:bg-white/70 hover:text-ink">
                 {l}
               </button>
@@ -183,6 +184,8 @@ export default function Landing() {
         </div>
       </section>
       <Brief />
+
+      <SolutionReel />
 
       <FivePoints s={stats.data} />
 

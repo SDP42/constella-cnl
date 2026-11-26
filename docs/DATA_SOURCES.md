@@ -18,9 +18,16 @@ The backend proxies and caches Overpass for 24 h, so the public instance is not 
 
 ### Footage
 
-| Asset | Source | Licence | Use |
-|---|---|---|---|
-| 120 frames (1280×720 JPEG, ~3.9 MB) from "Earth Views from the International Space Station" (HDEV camera, NASA HQ, 2019) | images.nasa.gov, NASA ID `Earth Views from the International Space Station` | NASA media, not copyrighted (no endorsement implied, credit NASA) | Scroll-scrubbed landing hero (`frontend/public/frames/orbit`) |
+The landing section "Solutions in the field" uses 132 frames (22 per clip, 1152 px JPEG, ~5.4 MB). They were extracted from six clips under the **Pexels License** (free for commercial use, attribution not required; credited here anyway):
+
+| Shot | Pexels video | Creator |
+|---|---|---|
+| Distribution data | Man doing inventory at the warehouse on a tablet, #4292901 | Tiger Lily |
+| Intelligence | Futuristic data visualisation dashboard, #34129037 | Chandresh Uike |
+| Smart Classroom | Classroom instruction using interactive whiteboard, #33747500 | Gokuldham Nar |
+| Smart City & Campus Security | High-tech control room with multiple CCTV monitors, #38779095 | Kiwi and Camera |
+| Hybrid Meeting Room | Woman using a laptop at the office, #7224727 | MART PRODUCTION |
+| Network + annuity | Blue coloured cables, #1085656 | Dima Krivoy |
 
 ## 2. Indian open data (demand side: who could buy what, where)
 
