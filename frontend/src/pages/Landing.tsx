@@ -13,16 +13,12 @@ import { homeFor, type Role } from '@/lib/auth'
 import { inr } from '@/lib/format'
 import { gsap, prefersReducedMotion, ScrollTrigger, scrollToId, useSmoothScroll } from '@/lib/motion'
 
-const NetworkFlight = lazy(() => import('@/components/three/NetworkFlight').then((m) => ({ default: m.NetworkFlight })))
-const DIVS = ['EB', 'HON', 'FMSG', 'FMCT', 'SVC'] as const
-const DIV_COLORS = ['#4f7bff', '#ffc21a', '#ff4d6d', '#9b6bff', '#19d39a']
+const Globe = lazy(() => import('@/components/three/Globe').then((m) => ({ default: m.Globe })))
 
 const CHAPTERS = [
-  { k: '01 · The network', short: 'Network', t: '', d: '600 partners across 24 cities — a sample of CNL’s 10,000-strong channel. Tower height is what each partner spends with CNL.', stat: '24 cities · 600 partners · 5 divisions' },
-  { k: '02 · The silos', short: 'Silos', t: 'Five teams. Five slices.', d: 'Zoom into Pune: every tower splits into five colours. Each division sees only its own segment of the partner — nobody sees the whole.', stat: 'Each team sees 1 of 5 segments' },
-  { k: '03 · The twin', short: 'Twin', t: 'TechNova, opened up.', d: 'Constella unifies every division record into one account twin. The glowing wireframe floors are what TechNova should be buying from CNL — and isn’t.', stat: 'Brands, gadgets and annuity: missing' },
-  { k: '04 · The solution', short: 'Solution', t: 'Sell the building, not the bricks.', d: 'The missing floors fly in as one Smart Classroom solution — cabling, hubs and AMC — and an annuity ring starts turning.', stat: 'p = 0.58 · fits credit · 70/30 split credit' },
-  { k: '05 · The machine', short: 'Routing', t: 'Every signal finds an owner.', d: 'Pull out: opportunities route from signal to the right rep in every city, with SLAs, escalation and automation behind them.', stat: '1,670 routed · 8 automation playbooks' },
+  { k: '01 · The network', short: 'Network', t: '', d: 'CNL reaches 10,000+ channel partners across India — resellers, system integrators, retailers and enterprises — through five product divisions.', stat: 'Mumbai HQ · 31+ branches · 25+ brands' },
+  { k: '02 · The routes', short: 'Routes', t: 'Every city. Every division.', d: 'Each partner buys from several divisions, but each division sees only its own slice. Constella stitches every slice into one account twin.', stat: '24 cities · 600 sample partners · 1 golden record each' },
+  { k: '03 · One partner', short: 'Zoom', t: 'Zoom into Pune.', d: 'TechNova Systems buys panels and PCs — but no cabling, hubs or AMC. Constella spots the missing Smart Classroom, routes it to the right owner and drafts the pitch.', stat: 'p = 0.58 · fits credit · 70/30 split credit' },
 ]
 
 const STEPS: { k: string; t: string; d: string; div: DivCode }[] = [
@@ -65,6 +61,13 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const stats = useQuery({ queryKey: ['public-stats'], queryFn: () => api('/api/public/stats'), staleTime: 60_000 })
 
+  // R3F measures its container once; nudge it after the sticky stage has laid out
+  useEffect(() => {
+    if (!net.data) return
+    const ids = [120, 600, 1500].map((ms) => setTimeout(() => dispatchEvent(new Event('resize')), ms))
+    return () => ids.forEach(clearTimeout)
+  }, [net.data])
+
   useEffect(() => {
     const on = () => {
       setScrolled(scrollY > 30)
@@ -74,7 +77,7 @@ export default function Landing() {
       const span = el.offsetHeight - innerHeight
       const p = Math.min(1, Math.max(0, (scrollY - top) / span))
       progress.current = prefersReducedMotion() ? Math.max(p, 0.7) : p
-      const c = p < 0.17 ? 0 : p < 0.36 ? 1 : p < 0.55 ? 2 : p < 0.76 ? 3 : 4
+      const c = p < 0.3 ? 0 : p < 0.62 ? 1 : 2
       setChapter((prev) => (prev === c ? prev : c))
     }
     on()
@@ -117,7 +120,7 @@ export default function Landing() {
             <span className="text-[17px] font-semibold tracking-tight">Constella</span>
           </a>
           <nav className="hidden items-center gap-1 text-sm md:flex">
-            {[['flight', 'Flight'], ['journey', 'How it works'], ['inventions', 'Inventions'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
+            {[['flight', 'Network'], ['journey', 'How it works'], ['inventions', 'Inventions'], ['proof', 'Proof'], ['seats', 'Seats']].map(([id, l]) => (
               <button key={id} onClick={() => scrollToId(id)} className="rounded-full px-3.5 py-1.5 text-ink-soft transition-colors hover:bg-white/70 hover:text-ink">
                 {l}
               </button>
@@ -130,14 +133,14 @@ export default function Landing() {
       </header>
 
       {/* cinematic 3D flight through the partner network (sticky stage, scroll-scrubbed) */}
-      <section id="flight" ref={flightRef} className="relative h-[700vh] bg-[#0b0e22]" aria-label="Flight through CNL's partner network">
+      <section id="flight" ref={flightRef} className="relative h-[400vh] bg-night" aria-label="Flight through CNL's partner network">
         <div className="sticky top-0 h-dvh w-full overflow-hidden">
           {net.data && (
             <Suspense fallback={null}>
-              <NetworkFlight cities={net.data.cities} progress={progress} className="absolute inset-0" />
+              <Globe cities={net.data.cities} progress={progress} className="absolute inset-0" />
             </Suspense>
           )}
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,14,34,.92)_0%,rgba(11,14,34,.7)_32%,transparent_58%)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,10,9,.9)_0%,rgba(12,10,9,.55)_34%,transparent_60%)]" />
           {/* chapters */}
           <div className="pointer-events-none absolute inset-0 mx-auto flex max-w-6xl items-center px-5">
             <div className="relative h-[60vh] w-full max-w-xl">
@@ -146,13 +149,13 @@ export default function Landing() {
                   <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/60">{c.k}</p>
                   {i === 0 ? (
                     <h1 className="mt-4 text-[clamp(2.6rem,6.6vw,6rem)] font-semibold leading-[0.95] tracking-tight">
-                      One partner.<br />Every division.<br /><span className="spectrum-text">One view.</span>
+                      One partner.<br />Every division.<br /><span className="spectrum-text italic">One view.</span>
                     </h1>
                   ) : (
                     <h2 className="mt-4 text-[clamp(2.2rem,5vw,4.4rem)] font-semibold leading-[1] tracking-tight">{c.t}</h2>
                   )}
                   <p className="mt-5 max-w-md text-lg leading-relaxed text-white/75">{c.d}</p>
-                  {c.stat && <p className="mt-6 font-mono text-sm text-white/90"><span className="text-[#ffd166]">●</span> {c.stat}</p>}
+                  {c.stat && <p className="mt-6 font-mono text-sm text-white/90"><span className="text-gold-bright">●</span> {c.stat}</p>}
                   {i === 0 && (
                     <div className="pointer-events-auto mt-8 flex gap-3">
                       <button onClick={() => scrollToId('seats')} className="flex items-center gap-2 rounded-full bg-white px-6 py-3.5 font-medium text-ink transition-transform hover:scale-[1.03]">
@@ -174,18 +177,9 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          {/* division legend */}
-          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-wrap justify-center gap-2" aria-label="Division colours">
-            {DIVS.map((d, i) => (
-              <span key={d} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 backdrop-blur">
-                <span className="size-2 rounded-full" style={{ background: DIV_COLORS[i], boxShadow: `0 0 10px ${DIV_COLORS[i]}` }} />
-                {({ EB: 'Enterprise', HON: 'Licensed & own brands', FMSG: 'Gadgets & drones', FMCT: 'Consumer & AI', SVC: 'Annuity' } as Record<string, string>)[d]}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
-      <div aria-hidden className="h-40 bg-gradient-to-b from-[#0b0e22] to-transparent" />
+      <div aria-hidden className="h-48 bg-gradient-to-b from-night to-transparent" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-3"><WireTicker /></div>
 
