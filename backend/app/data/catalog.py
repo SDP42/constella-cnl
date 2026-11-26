@@ -11,8 +11,8 @@ from typing import Any
 DIVISIONS: list[dict[str, str]] = [
     {"code": "EB", "name": "Enterprise Business", "color": "#38BDF8",
      "description": "High-volume displays, monitors, signage, storage and compute for enterprises & SIs"},
-    {"code": "HON", "name": "Honeywell Licensing", "color": "#F5B700",
-     "description": "Licensed Honeywell structured cabling, connectivity, air purifiers and audio"},
+    {"code": "HON", "name": "Licensed & Own Brands", "color": "#F5B700",
+     "description": "Honeywell (38-country licence), AT&T licensing and CNL's own WOZOYO brand"},
     {"code": "FMSG", "name": "Social-Media Gadgets", "color": "#F472B6",
      "description": "Experiential creator & lifestyle gadgets: Instax, Insta360, Lexar, Cricut, ZEISS"},
     {"code": "FMCT", "name": "Consumer Technology", "color": "#A78BFA",
@@ -51,6 +51,13 @@ CATEGORIES: dict[str, dict[str, Any]] = {
     "mobile_accessories": {"div": "FMCT", "label": "Mobile Accessories", "brands": ["pTron"], "price": 1100, "margin": 0.12, "wc": 20},
     "premium_audio": {"div": "FMCT", "label": "Premium Audio", "brands": ["Ruark Audio"], "price": 46000, "margin": 0.18, "wc": 50},
     "recovery_fitness": {"div": "FMCT", "label": "Recovery & Fitness", "brands": ["Hyperice"], "price": 24000, "margin": 0.17, "wc": 40},
+    "ai_workstation": {"div": "FMCT", "label": "AI Workstations", "brands": ["CyberPowerPC"], "price": 385000, "margin": 0.12, "wc": 45},
+    # Newer lines disclosed in the Q2 FY27 call (Oct 2026)
+    "surveillance": {"div": "EB", "label": "Surveillance Cameras", "brands": ["Infinova"], "price": 68000, "margin": 0.16, "wc": 60},
+    "fire_safety": {"div": "EB", "label": "Fire & Life Safety", "brands": ["Ravel"], "price": 54000, "margin": 0.15, "wc": 55},
+    "ai_server": {"div": "EB", "label": "AI / GPU Servers", "brands": ["Super Micro"], "price": 2400000, "margin": 0.06, "wc": 70},
+    "drone_kits": {"div": "FMSG", "label": "Drone STEM Kits", "brands": ["Drona Aviation"], "price": 46000, "margin": 0.19, "wc": 40},
+    "wozoyo_accessories": {"div": "HON", "label": "WOZOYO Essentials", "brands": ["WOZOYO"], "price": 3900, "margin": 0.28, "wc": 25},
     # Services & annuity — recurring, very high margin, near-zero inventory
     "filter_subscription": {"div": "SVC", "label": "Purifier Filter Subscription", "brands": ["Honeywell"], "price": 3200, "margin": 0.34, "wc": 10, "recurring": 6},
     "display_amc": {"div": "SVC", "label": "Display & AV AMC", "brands": ["Constella Care"], "price": 12000, "margin": 0.42, "wc": 5, "recurring": 12},
@@ -69,6 +76,8 @@ ANNUITY_FOR: dict[str, str] = {
     "gaming_pc": "extended_warranty",
     "action_camera": "extended_warranty",
     "mini_pc": "device_as_a_service",
+    "surveillance": "display_amc",
+    "ai_workstation": "extended_warranty",
 }
 
 SOLUTIONS: list[dict[str, Any]] = [
@@ -170,6 +179,55 @@ SOLUTIONS: list[dict[str, Any]] = [
         ],
         "annuity": [{"category": "cabling_certification", "per100": 2}],
     },
+    {
+        "id": "smart_city_security", "name": "Smart City & Campus Security", "icon": "shield",
+        "tagline": "Infinova surveillance + Ravel fire safety on a certified Honeywell backbone",
+        "verticals": ["government", "education", "healthcare", "manufacturing"],
+        "components": [
+            {"category": "surveillance", "role": "STQC-certified cameras", "required": True, "per100": 6},
+            {"category": "fire_safety", "role": "Fire & life safety panels", "required": True, "per100": 2},
+            {"category": "structured_cabling", "role": "Camera network backbone", "required": True, "per100": 3},
+            {"category": "enterprise_storage", "role": "Video retention storage", "required": False, "per100": 4},
+            {"category": "commercial_monitor", "role": "Control-room video wall", "required": False, "per100": 2},
+        ],
+        "annuity": [{"category": "display_amc", "per100": 6}, {"category": "cabling_certification", "per100": 1}],
+    },
+    {
+        "id": "onprem_ai_pod", "name": "On-prem AI Pod", "icon": "cpu",
+        "tagline": "'AI in a box' for BFSI & enterprises that won't send data to the cloud",
+        "verticals": ["bfsi", "it_ites", "healthcare", "manufacturing"],
+        "components": [
+            {"category": "ai_workstation", "role": "CyberPowerPC AI workstations", "required": True, "per100": 2},
+            {"category": "ai_server", "role": "Super Micro GPU server", "required": False, "per100": 0.3},
+            {"category": "enterprise_storage", "role": "NVMe data tier", "required": True, "per100": 6},
+            {"category": "structured_cabling", "role": "High-throughput LAN", "required": False, "per100": 1},
+        ],
+        "annuity": [{"category": "extended_warranty", "per100": 4}, {"category": "device_as_a_service", "per100": 2}],
+    },
+    {
+        "id": "drone_stem_lab", "name": "Drone STEM Lab", "icon": "plane",
+        "tagline": "Drona Aviation drone kits + classroom tech for schools and skilling centres",
+        "verticals": ["education", "government"],
+        "components": [
+            {"category": "drone_kits", "role": "Drone STEM kits", "required": True, "per100": 10},
+            {"category": "interactive_display", "role": "Lab teaching panel", "required": True, "per100": 1},
+            {"category": "mini_pc", "role": "Programming stations", "required": False, "per100": 6},
+            {"category": "memory_cards", "role": "Flight data storage", "required": False, "per100": 20},
+        ],
+        "annuity": [{"category": "extended_warranty", "per100": 10}],
+    },
+]
+
+# "If you want Honeywell, stock WOZOYO" — brand-bundle levers (CMD, Q2 FY27 call)
+BRAND_BUNDLES: list[dict[str, Any]] = [
+    {"id": "honeywell_wozoyo", "anchor": "air_purifier", "attach": "wozoyo_accessories",
+     "rule": "Partners who want Honeywell purifiers in season also stock WOZOYO essentials", "attach_rate_target": 0.6},
+    {"id": "display_amc", "anchor": "interactive_display", "attach": "display_amc",
+     "rule": "Every interactive panel ships with an AMC quote", "attach_rate_target": 0.5},
+    {"id": "camera_storage", "anchor": "surveillance", "attach": "enterprise_storage",
+     "rule": "Every camera deployment needs retention storage", "attach_rate_target": 0.7},
+    {"id": "ai_warranty", "anchor": "ai_workstation", "attach": "extended_warranty",
+     "rule": "AI workstations ship with extended warranty", "attach_rate_target": 0.55},
 ]
 
 VERTICALS = ["education", "healthcare", "retail", "bfsi", "it_ites", "manufacturing",
@@ -206,13 +264,13 @@ TYPE_DIVISION_AFFINITY: dict[str, dict[str, float]] = {
 
 # Vertical -> categories with elevated latent need
 VERTICAL_NEEDS: dict[str, list[str]] = {
-    "education": ["interactive_display", "projector", "mini_pc", "structured_cabling", "connectivity", "gaming_pc"],
+    "education": ["interactive_display", "projector", "mini_pc", "structured_cabling", "connectivity", "gaming_pc", "drone_kits", "surveillance"],
     "healthcare": ["digital_signage", "air_purifier", "structured_cabling", "commercial_monitor"],
-    "retail": ["digital_signage", "retail_security", "home_audio", "mobile_accessories", "instant_camera", "memory_cards"],
-    "bfsi": ["interactive_display", "commercial_monitor", "air_purifier", "home_audio", "mini_pc"],
-    "it_ites": ["commercial_monitor", "air_purifier", "connectivity", "interactive_display", "enterprise_storage"],
+    "retail": ["digital_signage", "retail_security", "home_audio", "mobile_accessories", "instant_camera", "memory_cards", "wozoyo_accessories"],
+    "bfsi": ["interactive_display", "commercial_monitor", "air_purifier", "home_audio", "mini_pc", "ai_workstation", "surveillance"],
+    "it_ites": ["commercial_monitor", "air_purifier", "connectivity", "interactive_display", "enterprise_storage", "ai_workstation"],
     "manufacturing": ["structured_cabling", "connectivity", "commercial_monitor", "enterprise_storage"],
-    "government": ["interactive_display", "structured_cabling", "digital_signage", "projector"],
+    "government": ["interactive_display", "structured_cabling", "digital_signage", "projector", "surveillance", "fire_safety", "drone_kits"],
     "hospitality": ["digital_signage", "home_audio", "air_purifier", "gaming_pc", "gaming_peripherals", "premium_audio"],
     "media_creators": ["action_camera", "memory_cards", "video_accessories", "instant_camera", "optics", "premium_audio"],
 }
