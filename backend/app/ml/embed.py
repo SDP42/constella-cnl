@@ -22,6 +22,10 @@ _lock = threading.Lock()
 
 @lru_cache(maxsize=1)
 def _model():
+    from app.core.config import get_settings
+
+    if get_settings().lite:  # free-tier deploy: skip the ~130 MB model, callers fall back to TF-IDF
+        return None
     try:
         from fastembed import TextEmbedding
 

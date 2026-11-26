@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     rate_limit_per_min: int = 240
     login_rate_limit_per_min: int = 12
     rebuild_on_start: bool = False
+    # Free-tier mode (Render 512 MB): no pretrained embedding model (TF-IDF fallback), load the model trained at build time.
+    lite: bool = False
+    model_path: str = str(BASE_DIR / "data" / "model.joblib")
     database_url: str = f"sqlite:///{BASE_DIR / 'data' / 'constella.db'}"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

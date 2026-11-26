@@ -135,6 +135,9 @@ def retrain(reason: str = "manual") -> dict[str, Any]:
             s.commit()
             if promoted:
                 state.model, state.metrics = ch, ch.metrics
+                from app.pipeline import save_model
+
+                save_model(ch)
             info["rescore"] = rescore(s, f)
             info["seconds"] = round(time.time() - t0, 1)
             _status["orders_since_train"] = 0

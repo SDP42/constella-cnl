@@ -75,6 +75,7 @@ def build(verbose: bool = True) -> dict[str, Any]:
         model, _ = train_and_evaluate(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
                                       settings.eval_window_days, settings.top_k)
         state.model, state.metrics, state.resolution = model, model.metrics, report
+        save_model(model)
         s.add(ModelRun(created_at=settings.demo_now, metrics={**model.metrics, "resolution": report}))
         log(f"model AUC={model.metrics['models']['constella_gbm']['auc']} "
             f"P@5={model.metrics['models']['constella_gbm']['precision@5']}")
@@ -117,12 +118,37 @@ def build(verbose: bool = True) -> dict[str, Any]:
     return {"accounts": len(w.accounts), "opportunities": len(b.opps), "signals": len(b.signals)}
 
 
+def save_model(model: Any) -> None:
+    """Persist the trained model so a small instance can start without retraining."""
+    import joblib
+
+    joblib.dump(model, settings.model_path, compress=3)
+
+
+def _load_model() -> Any | None:
+    from pathlib import Path
+
+    if not Path(settings.model_path).exists():
+        return None
+    import joblib
+
+    try:
+        return joblib.load(settings.model_path)
+    except Exception:  # noqa: BLE001 — stale/incompatible file: retrain
+        return None
+
+
 def warm(verbose: bool = True) -> None:
-    """Re-hydrate in-memory model + live scores from an existing database (no data regeneration)."""
+    """Re-hydrate in-memory model + live scores from an existing database (no data regeneration).
+    In lite mode the model trained at build time is loaded instead of retraining (fast, low-memory start)."""
     with Session(engine) as s:
         f = frames(s)
-        model, _ = train_and_evaluate(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
-                                      settings.eval_window_days, settings.top_k)
+        model = _load_model() if settings.lite else None
+        if model is None:
+            model, _ = train_and_evaluate(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
+                                          settings.eval_window_days, settings.top_k)
+            if settings.lite:
+                save_model(model)
         live, ctx = snapshot(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
                              settings.eval_window_days, with_labels=False)
         live["p"] = model.clf.predict_proba(live[FEATURES])[:, 1]
