@@ -138,12 +138,37 @@ def _load_model() -> Any | None:
         return None
 
 
-def warm(verbose: bool = True) -> None:
+def _load_baked() -> dict[str, Any] | None:
+    """Scores and page caches computed at build time by ``app.bake`` (lite mode only)."""
+    from app.bake import WARM_PATH
+
+    if not WARM_PATH.exists():
+        return None
+    import joblib
+
+    try:
+        return joblib.load(WARM_PATH)
+    except Exception:  # noqa: BLE001 — stale/incompatible file: compute instead
+        return None
+
+
+def warm(verbose: bool = True, use_baked: bool = True) -> None:
     """Re-hydrate in-memory model + live scores from an existing database (no data regeneration).
-    In lite mode the model trained at build time is loaded instead of retraining (fast, low-memory start)."""
+    In lite mode the model trained at build time is loaded instead of retraining (fast, low-memory start),
+    and the live scores and heavy page caches baked at build time are loaded instead of recomputed."""
+    model = _load_model() if settings.lite else None
+    baked = _load_baked() if (settings.lite and use_baked and model is not None) else None
+    if baked is not None:
+        with Session(engine) as s:
+            run = s.exec(select(ModelRun).order_by(ModelRun.id.desc())).first()
+        state.model, state.metrics, state.live, state.cooc = model, model.metrics, baked["live"], baked["cooc"]
+        state.cache = baked["cache"]
+        state.resolution = (run.metrics or {}).get("resolution", {}) if run else {}
+        if verbose:
+            print(f"[constella] warmed from build-time bake ({len(state.cache)} cached results)", flush=True)
+        return
     with Session(engine) as s:
         f = frames(s)
-        model = _load_model() if settings.lite else None
         if model is None:
             model, _ = train_and_evaluate(f["tx"], f["accounts"], f["interactions"], settings.demo_now.date(),
                                           settings.eval_window_days, settings.top_k)
