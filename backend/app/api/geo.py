@@ -113,3 +113,11 @@ def retrain(_: Principal = Depends(require("model"))) -> dict[str, Any]:
 @router.post("/learn/rescore")
 def rescore(s: Session = Depends(get_session), _: Principal = Depends(require("model"))) -> dict[str, Any]:
     return learning.rescore(s)
+
+
+# ------------------------------------------------------------------ PS1 scorecard (live evidence)
+@router.get("/proof/scorecard")
+def scorecard(s: Session = Depends(get_session), _: Principal = Depends(current_principal)) -> dict[str, Any]:
+    from app.services import scorecard as sc
+
+    return _c("scorecard", lambda: sc.build(s, _frames(s)))
