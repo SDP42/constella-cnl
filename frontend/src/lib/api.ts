@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useAuth } from './auth'
 
 export class ApiError extends Error {
@@ -11,7 +12,31 @@ export class ApiError extends Error {
 /** Same-origin by default (Vite proxy locally, Vercel rewrite in production). Set VITE_API_URL to call the API directly. */
 export const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
+/** Free-tier hosts sleep when idle: ping as soon as the app opens so the API is awake before the first real call. */
+export function warmUp() {
+  fetch(`${API_BASE}/api/health`, { cache: 'no-store' }).catch(() => {})
+}
+
+let wakeNoticeShown = false
+function slowNotice() {
+  return setTimeout(() => {
+    if (wakeNoticeShown) return
+    wakeNoticeShown = true
+    toast.loading('Waking the free-tier server… the first load can take up to a minute', { id: 'wake', duration: 60_000 })
+  }, 2500)
+}
+
 export async function api<T = any>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+  const t = slowNotice()
+  try {
+    return await apiInner<T>(path, init)
+  } finally {
+    clearTimeout(t)
+    if (wakeNoticeShown) toast.dismiss('wake')
+  }
+}
+
+async function apiInner<T = any>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const token = useAuth.getState().token
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (init.json !== undefined) headers['Content-Type'] = 'application/json'
