@@ -44,6 +44,15 @@ def parse(text: str) -> dict[str, Any]:
         if kw in low:
             for c in cats:
                 hits.setdefault(c, []).append(kw)
+    semantic = []
+    try:
+        from app.ml.semantic import intents
+
+        semantic = intents(text)
+    except Exception:  # noqa: BLE001 — model optional
+        semantic = []
+    for x in semantic:
+        hits.setdefault(x["category"], []).append(f"≈meaning {x['similarity']:.2f}")
     qty = [{"qty": int(m.group(1)), "unit": m.group(2).lower(), "span": m.group(0)} for m in QTY.finditer(text)]
     timing, urgency = "unspecified", 0.5
     for pat, (label, u) in TIMING.items():
@@ -63,4 +72,5 @@ def parse(text: str) -> dict[str, Any]:
                    "matched": sorted(set(k))} for c, k in hits.items()]
     strength = min(1.0, 0.35 + 0.15 * len(categories) + 0.25 * urgency + (0.1 if qty else 0))
     return {"categories": categories, "quantities": qty, "timing": timing, "urgency": urgency,
-            "competitor": competitor, "solutions": solutions[:3], "strength": round(strength, 2)}
+            "competitor": competitor, "solutions": solutions[:3], "strength": round(strength, 2),
+            "semantic": semantic, "engine": "lexicon + bge-small embeddings" if semantic else "lexicon"}

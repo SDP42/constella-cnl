@@ -166,8 +166,15 @@ def dedupe(body: DedupeIn, s: Session = Depends(get_session), _: Principal = Dep
             cands.append({"id": a.id, "name": a.name, "city": a.city, "score": 1.0, "rule": "GSTIN exact"})
         elif a.city.lower() == body.city.lower():
             sc = score_pair(body.name, a.name, a.city) / 100
+            rule = "fuzzy name in city"
+            if 0.55 <= sc < 0.86:  # ambiguous band: ask the pretrained embedding model for a second opinion
+                from app.ml import embed
+
+                cs = embed.cosine(body.name.lower(), a.name.lower())
+                if cs is not None and cs >= 0.85:
+                    sc, rule = max(sc, round((sc + cs) / 2, 3)), "fuzzy + semantic name (bge-small)"
             if sc >= 0.72:
-                cands.append({"id": a.id, "name": a.name, "city": a.city, "score": round(sc, 3), "rule": "fuzzy name in city"})
+                cands.append({"id": a.id, "name": a.name, "city": a.city, "score": round(sc, 3), "rule": rule})
     cands.sort(key=lambda x: -x["score"])
     return {"gstin_valid": A.gstin_valid(body.gstin.upper()) if body.gstin else None, "candidates": cands[:5],
             "verdict": "duplicate" if cands and cands[0]["score"] >= 0.86 else "review" if cands else "new partner"}

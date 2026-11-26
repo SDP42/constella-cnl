@@ -38,10 +38,30 @@ def _index() -> tuple[list[Chunk], TfidfVectorizer, np.ndarray]:
     return chunks, vec, mat
 
 
+@lru_cache
+def _dense() -> np.ndarray | None:
+    from app.ml import embed
+
+    chunks, _, _ = _index()
+    return embed.encode([f"{c.title}. {c.text}" for c in chunks])
+
+
 def search(query: str, k: int = 4) -> list[dict[str, object]]:
+    """Hybrid retrieval: TF-IDF (exact terms, policy numbers) + bge-small embeddings (meaning), 50/50."""
     chunks, vec, mat = _index()
     q = vec.transform([query])
     scores = (mat @ q.T).toarray().ravel()
+    try:
+        from app.ml import embed
+
+        d = _dense()
+        qv = embed.encode([query]) if d is not None else None
+        if d is not None and qv is not None:
+            dense = d @ qv[0]
+            lex = scores / (scores.max() or 1.0)
+            scores = 0.5 * lex + 0.5 * np.clip((dense - 0.3) / 0.6, 0, 1)
+    except Exception:  # noqa: BLE001 — fall back to lexical only
+        pass
     top = np.argsort(-scores)[:k]
     return [{"doc": chunks[i].doc, "title": chunks[i].title, "text": chunks[i].text, "score": round(float(scores[i]), 3)}
             for i in top if scores[i] > 0]

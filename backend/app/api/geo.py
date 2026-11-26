@@ -121,3 +121,33 @@ def scorecard(s: Session = Depends(get_session), _: Principal = Depends(current_
     from app.services import scorecard as sc
 
     return _c("scorecard", lambda: sc.build(s, _frames(s)))
+
+
+# ------------------------------------------------------------------ model registry (trained + pretrained)
+@router.get("/ai/models")
+def models(_: Principal = Depends(current_principal)) -> dict[str, Any]:
+    from app.ml import embed
+
+    m = state.metrics or {}
+    gbm = (m.get("models") or {}).get("constella_gbm", {})
+    return {"models": [
+        {"name": "Next-best-category propensity", "kind": "trained here", "algo": "HistGradientBoosting + isotonic calibration (scikit-learn)",
+         "use": "Opportunity detection & ranking", "status": "live", "metric": f"AUC {gbm.get('auc')} · ECE {m.get('ece')}"},
+        {"name": "Churn risk", "kind": "trained here", "algo": "Logistic regression on recency/frequency/momentum", "use": "Revenue-at-risk radar", "status": "live", "metric": "see BI & forecast"},
+        {"name": "Demand forecast", "kind": "trained here", "algo": "Log-linear trend + Fourier seasonality (ridge)", "use": "FY29 path, seasonality", "status": "live", "metric": "back-test MAPE ≈ 0.23"},
+        {"name": "bge-small-en-v1.5", "kind": "pretrained", "algo": "BAAI sentence embeddings, 384-d, ONNX via fastembed (MIT)",
+         "use": "Copilot RAG (hybrid), note intent detection, partner dedupe", "status": "live" if embed.available() else "offline → TF-IDF fallback", "metric": "zero-shot; threshold 0.58, margin 0.05"},
+        {"name": "Claude (Anthropic API)", "kind": "pretrained (API)", "algo": "LLM with tool use via LangGraph", "use": "Copilot reasoning, pitch drafting",
+         "status": "live" if __import__("os").environ.get("ANTHROPIC_API_KEY") else "offline graph (no key)", "metric": "guard-railed tools"},
+    ]}
+
+
+class IntentIn(BaseModel):
+    text: str = Field(min_length=3, max_length=2000)
+
+
+@router.post("/ai/intent")
+def intent(body: IntentIn, _: Principal = Depends(current_principal)) -> dict[str, Any]:
+    from app.ml.semantic import intents
+
+    return {"text": body.text, "intents": intents(body.text)}
