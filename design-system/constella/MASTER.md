@@ -1,41 +1,41 @@
-# Constella — Design System (MASTER, v2)
+# Constella — Design System (MASTER, v3 "Liquid Glass Prism")
 
-Generated with the **UI UX Pro Max** skill (`--design-system --variance 9 --motion 9`, then `--domain style`
-rows *Bauhaus*, *Kinetic Typography*, *Interactive Cursor Design*, `--domain gsap`). v1 ("paper atlas") was
-replaced at the user's request for something less common.
+Chosen by the user from three skill-backed options (v1 paper atlas and v2 Bauhaus were rejected as
+common/retro). Sources: UI UX Pro Max `--domain style` rows **Liquid Glass** and **Spatial UI (VisionOS)**,
+typography pairing **Premium Sans (DM Sans)**.
 
-## Direction: "Constructivist Revenue Machine"
-Bauhaus geometry + kinetic typography + a 3D kinetic sculpture. A B2B distributor sells *parts*; Constella
-assembles them into *machines* (solutions). Every visual is built from five primitives — one per CNL division.
+## Metaphor
+A partner is white light. CNL's divisions are the spectrum. Today the prism *splits* the partner into five
+separate beams (silos). Constella *recombines* them: on scroll the beams fold back into one white beam — the
+integrated solution. Small glass shards drifting in the scene are individual SKUs.
 
-| Division | Primitive | Colour | Why |
-|---|---|---|---|
-| EB — Enterprise Business | cube | Bauhaus blue `#1040C0` | solid, structural, volume |
-| HON — Honeywell licensing | sphere | CNL yellow `#F5B700` | CNL's own logo colour |
-| FMSG — social-media gadgets | cone / triangle | Bauhaus red `#D02020` | fast, pointed, trend-driven |
-| FMCT — consumer tech | cylinder | ink `#121212` | the workhorse |
-| SVC — services & annuity | ring / torus | verdigris `#1E8F4E` | a ring = recurring revenue |
+| Division | Spectrum colour |
+|---|---|
+| EB — Enterprise Business | `#3B6BFF` |
+| HON — Licensed & Own Brands (Honeywell, AT&T, WOZOYO) | `#F5B700` (CNL logo gold) |
+| FMSG — social-media gadgets & drones | `#FF4D6D` |
+| FMCT — consumer tech & AI workstations | `#8B5CF6` |
+| SVC — services & annuity | `#10B981` |
 
-## Tokens
-- Background `#F0EDE6` (warm off-white), surface `#FAF8F3`, foreground `#121212`, muted `#5C5A55`
-- Border `2px solid #121212` on hero blocks; `1px rgb(18 18 18 / .14)` in data screens
-- Hard shadow `4px 4px 0 #121212` (buttons, hero cards); press = translate(2px,2px) + no shadow
-- Radius: `0` for blocks/cards, `9999px` for pills/buttons (skill: Bauhaus CSS keywords)
-- **No line grids, no dot grids, no glow-on-black, no purple gradients** (user + skill anti-patterns)
+## Materials (skill: Spatial UI variables)
+- Page: pearl `#F5F6FA` with 3–5 slow, large, blurred colour fields (the light the glass refracts). No grids, no lines.
+- **Glass (navigation, controls, overlays only)**: `rgba(255,255,255,.42)`, `backdrop-filter: blur(28px) saturate(180%)`,
+  1px inner highlight `rgba(255,255,255,.75)`, iridescent hairline edge, radius 24px, shadow `0 8px 32px rgba(14,18,32,.10)`.
+- **Content layer (cards, tables, charts)**: near-opaque `rgba(255,255,255,.82)`, blur 12px, radius 20px — the skill says
+  keep content on a separate, legible layer.
+- `@media (prefers-reduced-transparency: reduce)` → opaque white panels.
 
-## Typography
-- Display: **Outfit** 900, uppercase, tracking -0.04em, line-height 0.88 (skill pairing "bauhaus, geometric, constructivist")
-- Body/UI: Outfit 400–500, 16px, 1.55
-- Figures: JetBrains Mono, tabular
+## Type
+- DM Sans variable — display 600–700, tracking −0.035em, sentence case; body 16px / 1.55.
+- JetBrains Mono for figures and labels (tabular numbers).
+- Ink `#0E1220`, secondary `#5B6275` (≥ 7:1 on pearl).
 
-## Motion (dial 9 — complex)
-- Landing: GSAP ScrollTrigger pinned scrub (`start: top top, end: +=150%, scrub: 1, pin: true`), SplitText char
-  reveals (`rotateX -40 → 0, stagger .015, expo.out`), kinetic marquees, custom blend-mode cursor with magnetic pull.
-- App: 150–250 ms ease-out transitions only; no scroll-jacking; data first.
-- `prefers-reduced-motion`: no scrub/pin, final states rendered, cursor disabled.
+## Motion
+- Landing: GSAP ScrollTrigger pin + scrub drives the prism stage (split → converge → white beam). SplitText-style
+  word rises; fluid morph transitions (skill: "fluid morph transitions"). 600–900 ms `expo.out`.
+- App: 150–250 ms, scale-on-focus 1.02, no scroll-jacking.
+- Reduced motion → static final states.
 
-## Accessibility (skill checklist)
-- Contrast ≥ 4.5:1 (yellow is a fill, never text on off-white; text on yellow is `#121212`)
-- Visible focus: 3px `#1040C0` outline, 2px offset
-- Custom cursor only on pointer: fine devices; native cursor kept for inputs
-- Lucide SVG icons, no emoji icons; 44px minimum touch targets
+## Do not
+Retro/Bauhaus geometry, hard offset shadows, dark grid backgrounds, neon-on-black, purple-pink AI gradients as
+backgrounds, glass on dense text.
