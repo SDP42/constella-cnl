@@ -82,6 +82,7 @@ def _prewarm() -> None:
     except Exception:  # noqa: BLE001
         return
     for path in PREWARM:
+        _t.sleep(1.5)  # leave gaps so health checks and real users are never starved on 0.1 CPU
         try:
             urllib.request.urlopen(urllib.request.Request(base + path, headers={"Authorization": f"Bearer {token}"}), timeout=120).read()
         except Exception:  # noqa: BLE001 — best effort
@@ -106,6 +107,8 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_cr
 async def guard(request: Request, call_next):
     ip = request.client.host if request.client else "?"
     path = request.url.path
+    if path == "/api/health":  # keep the health check out of rate limits and DB writes
+        return await call_next(request)
     if path.startswith("/api") and not limiter.allow(ip, "api", settings.rate_limit_per_min):
         return JSONResponse({"detail": "rate limit exceeded"}, status_code=429, headers={"Retry-After": "10"})
     response = await call_next(request)
@@ -136,7 +139,8 @@ app.include_router(geo.router)
 
 
 @app.get("/api/health", tags=["platform"])
-def health() -> dict:
+async def health() -> dict:
+    # async on purpose: answered on the event loop, never queued behind heavy work in the thread pool
     return {"status": "ok", "model_ready": state.model is not None, "now": state.now.isoformat()}
 
 
