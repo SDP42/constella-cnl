@@ -214,8 +214,8 @@ def build_world() -> World:
         used_names.add(name)
         emp_mu = {"enterprise": 6.2, "system_integrator": 4.2, "reseller": 3.2, "retailer": 2.6, "sub_distributor": 3.6}[atype]
         employees = int(max(5, g.lognormal(emp_mu, 0.8))) if aid != 1 else 140
-        per_emp = {"enterprise": 38000, "system_integrator": 210000, "reseller": 160000,
-                   "retailer": 140000, "sub_distributor": 260000}[atype]
+        per_emp = {"enterprise": 62000, "system_integrator": 340000, "reseller": 260000,
+                   "retailer": 220000, "sub_distributor": 420000}[atype]
         spend = float(employees * per_emp * g.lognormal(0, 0.35))
         gstin, pan = _gstin(r, region)
         tier = "platinum" if spend > 6e7 else "gold" if spend > 2e7 else "silver" if spend > 6e6 else "bronze"
@@ -253,6 +253,8 @@ def build_world() -> World:
                 v *= 1.8
             if spec["div"] == "SVC":
                 v *= 0.12  # annuity attach is weak today
+            if c in ("ai_server", "ai_workstation", "surveillance", "fire_safety", "drone_kits"):
+                v *= 0.45  # newer lines (Q2 FY27): early adoption
             need[cat_idx[c]] = v * g.lognormal(0, 0.45)
         a["_need"] = need
         a["_intents"] = [s["id"] for s in intents]
@@ -307,6 +309,8 @@ def build_world() -> World:
                     p = r.choice(skus_by_cat[c])
                     qty = max(1, int(g.poisson(max(1.0, scale * {"memory_cards": 12, "connectivity": 10,
                                                                    "mobile_accessories": 25}.get(c, 2)))))
+                    if C.CATEGORIES[c]["price"] > 300000:
+                        qty = 1 if r.random() < 0.8 else 2  # big-ticket servers/workstations ship in ones and twos
                     day = month_start + timedelta(days=r.randint(0, 27))
                     if day > now:
                         continue

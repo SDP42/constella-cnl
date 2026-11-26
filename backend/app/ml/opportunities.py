@@ -211,9 +211,9 @@ class OpportunityBuilder:
                     row = live.loc[(live["account_id"] == aid) & (live["category"] == c)].iloc[0]
                     codes = reason_codes(row, self.m)
                     why = []
-                    if row["_note"]:
+                    if isinstance(row["_note"], str):
                         why.append(f"Partner said: “{row['_note']}”")
-                    if row["_antecedent"]:
+                    if isinstance(row["_antecedent"], str):
                         why.append(f"Accounts that buy {LABEL[row['_antecedent']]} adopt {spec['label']} "
                                    f"{row['rule_lift']:.1f}× more often")
                     if row["peer_adoption"] > 0:
