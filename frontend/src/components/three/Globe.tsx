@@ -1,9 +1,10 @@
 import { QuadraticBezierLine } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import { Suspense, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { INDIA } from '@/lib/geo'
+import { GIBS_GLOBE } from '@/lib/geoLayers'
 
 /**
  * Night-side globe facing India. Scroll progress (0..1) zooms the camera from orbit to India to Pune.
@@ -33,6 +34,22 @@ export function latLng(lat: number, lng: number, r = R) {
 const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
 const seg = (p: number, a: number, b: number) => ease(Math.min(1, Math.max(0, (p - a) / (b - a))))
 
+// Day/night Earth from NASA GIBS (Blue Marble NG + VIIRS Black Marble), blended across a soft terminator.
+const earthVert = `varying vec2 vUv; varying vec3 vNw; varying vec3 vP; void main(){ vUv = uv; vNw = normalize(mat3(modelMatrix)*normal); vec4 mv = modelViewMatrix*vec4(position,1.0); vP = mv.xyz; gl_Position = projectionMatrix*mv; }`
+const earthFrag = `uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun; uniform float uReady; uniform float uNightBoost;
+varying vec2 vUv; varying vec3 vNw; varying vec3 vP;
+void main(){
+  float d = dot(normalize(vNw), normalize(uSun));
+  float k = smoothstep(-0.18, 0.28, d);
+  vec3 day = texture2D(uDay, vUv).rgb; day = pow(day, vec3(0.95)) * (0.18 + 1.05*max(d, 0.0));
+  vec3 nt = texture2D(uNight, vUv).rgb; float lum = dot(nt, vec3(0.299,0.587,0.114));
+  vec3 night = vec3(0.012,0.016,0.03) + vec3(1.0,0.78,0.45) * pow(lum, 1.6) * uNightBoost;
+  vec3 col = mix(night, day, k);
+  float rim = pow(1.0 - abs(dot(normalize(-vP), normalize((viewMatrix*vec4(vNw,0.0)).xyz))), 4.0);
+  col += vec3(0.35,0.55,0.9) * rim * 0.35 * k;
+  gl_FragColor = vec4(mix(vec3(0.137,0.114,0.09), col, uReady), 1.0);
+}`
+
 const atmoVert = `varying vec3 vN; varying vec3 vP; void main(){ vN = normalize(normalMatrix*normal); vec4 mv = modelViewMatrix*vec4(position,1.0); vP = mv.xyz; gl_Position = projectionMatrix*mv; }`
 const atmoFrag = `uniform vec3 uC; uniform float uI; varying vec3 vN; varying vec3 vP; void main(){ float f = pow(1.0 - abs(dot(normalize(-vP), vN)), 3.0); gl_FragColor = vec4(uC, f*uI); }`
 
@@ -41,6 +58,22 @@ function Earth({ cities, progress }: { cities: GlobeCity[]; progress: React.Muta
   const arcs = useRef<any[]>([])
   const lights = useRef<THREE.Group>(null)
   const pune = useRef<THREE.Mesh>(null)
+  const earthMat = useRef<THREE.ShaderMaterial>(null)
+  const tex = useRef<{ day: THREE.Texture | null; night: THREE.Texture | null }>({ day: null, night: null })
+  const earthU = useMemo(() => ({ uDay: { value: null as THREE.Texture | null }, uNight: { value: null as THREE.Texture | null },
+    uSun: { value: new THREE.Vector3(-0.85, 0.3, 0.55) }, uReady: { value: 0 }, uNightBoost: { value: 2.4 } }), [])
+  useEffect(() => {
+    const loader = new THREE.TextureLoader()
+    loader.setCrossOrigin('anonymous')
+    const ok = (key: 'day' | 'night') => (t: THREE.Texture) => {
+      t.colorSpace = THREE.SRGBColorSpace
+      t.anisotropy = 8
+      t.needsUpdate = true
+      tex.current[key] = t
+    }
+    loader.load(GIBS_GLOBE.day, ok('day'), undefined, (e) => console.warn('GIBS day texture failed', e))
+    loader.load(GIBS_GLOBE.night, ok('night'), undefined, (e) => console.warn('GIBS night texture failed', e))
+  }, [])
 
   // orient so India (22N, 80E) faces the camera (+z)
   const baseQ = useMemo(() => new THREE.Quaternion().setFromUnitVectors(latLng(22, 80).normalize(), new THREE.Vector3(0, 0, 1)), [])
@@ -92,6 +125,12 @@ function Earth({ cities, progress }: { cities: GlobeCity[]; progress: React.Muta
       q.copy(baseQ).slerp(puneQ, seg(p, 0.55, 0.9))
       group.current.quaternion.copy(drift).multiply(q)
     }
+    const mu = earthMat.current?.uniforms
+    if (mu && tex.current.day && tex.current.night) {
+      mu.uDay.value = tex.current.day
+      mu.uNight.value = tex.current.night
+      mu.uReady.value = Math.min(1, mu.uReady.value + dt * 0.8)
+    }
     const arcOn = seg(p, 0.25, 0.5)
     arcs.current.forEach((l, i) => {
       if (!l) return
@@ -115,14 +154,14 @@ function Earth({ cities, progress }: { cities: GlobeCity[]; progress: React.Muta
   return (
     <group ref={group}>
       <mesh>
-        <sphereGeometry args={[R, 96, 96]} />
-        <meshStandardMaterial color="#231d17" roughness={0.9} metalness={0.05} />
+        <sphereGeometry args={[R, 128, 128]} />
+        <shaderMaterial ref={earthMat} vertexShader={earthVert} fragmentShader={earthFrag} uniforms={earthU} />
       </mesh>
       <points geometry={graticule}>
-        <pointsMaterial size={0.012} color="#6b5d4a" transparent opacity={0.45} sizeAttenuation />
+        <pointsMaterial size={0.01} color="#6b5d4a" transparent opacity={0.12} sizeAttenuation />
       </points>
       <points geometry={land}>
-        <pointsMaterial size={0.02} color="#d9b46a" transparent opacity={0.85} sizeAttenuation />
+        <pointsMaterial size={0.014} color="#f5c56a" transparent opacity={0.32} sizeAttenuation />
       </points>
       <group ref={lights}>
         {cities.map((c) => {
@@ -148,12 +187,12 @@ function Earth({ cities, progress }: { cities: GlobeCity[]; progress: React.Muta
       <mesh scale={1.06}>
         <sphereGeometry args={[R, 64, 64]} />
         <shaderMaterial vertexShader={atmoVert} fragmentShader={atmoFrag} transparent side={THREE.BackSide} depthWrite={false}
-          uniforms={{ uC: { value: new THREE.Color('#e8a64e') }, uI: { value: 0.75 } }} />
+          uniforms={{ uC: { value: new THREE.Color('#7fb2ff') }, uI: { value: 0.85 } }} />
       </mesh>
       <mesh scale={1.002}>
         <sphereGeometry args={[R, 64, 64]} />
         <shaderMaterial vertexShader={atmoVert} fragmentShader={atmoFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending}
-          uniforms={{ uC: { value: new THREE.Color('#c98a3a') }, uI: { value: 0.35 } }} />
+          uniforms={{ uC: { value: new THREE.Color('#9cc4ff') }, uI: { value: 0.28 } }} />
       </mesh>
     </group>
   )
