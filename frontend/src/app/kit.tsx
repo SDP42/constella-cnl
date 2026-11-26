@@ -103,3 +103,21 @@ export function Loading({ rows = 4 }: { rows?: number }) {
     </div>
   )
 }
+
+/** "How this is calculated / why it matters" — every number on screen carries its reasoning. */
+export function Reasoning({ how, why, source }: { how: ReactNode; why?: ReactNode; source?: ReactNode }) {
+  return (
+    <details className="group mt-4 rounded-xl border border-ink/5 bg-ink/[0.02] px-3 py-2 text-xs text-ink-soft open:bg-white/60">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 font-medium text-ink/70">
+        <span className="grid size-4 place-items-center rounded-full bg-gold/15 text-[10px] text-gold">i</span>
+        How this is calculated & why it matters
+        <span className="ml-auto transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+      <div className="mt-2 space-y-1.5 leading-relaxed">
+        <p><b className="text-ink/80">How:</b> {how}</p>
+        {why && <p><b className="text-ink/80">Why:</b> {why}</p>}
+        {source && <p><b className="text-ink/80">Source:</b> {source}</p>}
+      </div>
+    </details>
+  )
+}
