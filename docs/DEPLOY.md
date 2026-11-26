@@ -16,7 +16,8 @@ Browser ──► Vercel (React static build)
 What lite mode changes:
 
 - **No pretrained embedding model.** Semantic intent, RAG and dedupe fall back to TF-IDF and the keyword lexicon. This saves ~130 MB.
-- **Database and model built at build time.** `python -m app.pipeline` runs in Render's build step and writes `data/constella.db` and `data/model.joblib`. The free instance only loads them.
+- **Database, model and heavy pages built at build time.** `python -m app.pipeline` writes `data/constella.db` and `data/model.joblib`; `python -m app.bake` computes the live scores and the 13 heaviest pages and saves them to `data/warm.joblib`. The free instance only loads them (start ~2.6 s, ~258 MB, heavy pages answer in milliseconds).
+- **Health check never waits.** `/api/health` is async and skips rate limits and the audit log, so Render's 5-second check is answered even while a heavy request runs.
 - **Lazy imports.** The Anthropic SDK and LangGraph load only when the copilot is first used (~55 MB saved at start).
 - **Single worker,** and `MALLOC_ARENA_MAX=2` to limit glibc memory fragmentation.
 
@@ -31,7 +32,7 @@ Free-plan caveats:
 1. Push the repo to GitHub (already at `SDP42/constella-cnl`).
 2. In Render, go to **New → Blueprint**, pick the repo, and Render reads [`render.yaml`](../render.yaml).
 3. It creates `constella-cnl` (free, region Singapore) with:
-   - build: `pip install uv && uv sync --frozen --no-dev && uv run python -m app.pipeline`
+   - build: `pip install uv && uv sync --frozen --no-dev && uv run python -m app.pipeline && uv run python -m app.bake`
    - start: `.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`
    - env: `CONSTELLA_LITE=true`, a generated `CONSTELLA_SECRET_KEY`, `PYTHON_VERSION=3.12.7`, and optionally `ANTHROPIC_API_KEY`
 4. Check `https://constella-cnl.onrender.com/api/health`. If Render gives a different hostname, use it in step 2 below.
