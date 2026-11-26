@@ -15,6 +15,9 @@ import { homeFor, type Role } from '@/lib/auth'
 import { inr } from '@/lib/format'
 import { gsap, prefersReducedMotion, ScrollTrigger, scrollToId, useSmoothScroll } from '@/lib/motion'
 
+import networkSnapshot from '@/data/network.snapshot.json'
+import statsSnapshot from '@/data/stats.snapshot.json'
+
 const Globe = lazy(() => import('@/components/three/Globe').then((m) => ({ default: m.Globe })))
 
 const CHAPTERS = [
@@ -40,10 +43,11 @@ export default function Landing() {
   const flightRef = useRef<HTMLElement>(null)
   const globeWrap = useRef<HTMLDivElement>(null)
   const [chapter, setChapter] = useState(0)
-  const net = useQuery({ queryKey: ['public-network'], queryFn: () => api('/api/public/network'), staleTime: 300_000 })
+  // baked snapshots render instantly while the (possibly sleeping) free-tier API wakes up
+  const net = useQuery<any>({ queryKey: ['public-network'], queryFn: () => api('/api/public/network'), staleTime: 300_000, placeholderData: networkSnapshot as any })
   const [busy, setBusy] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const stats = useQuery({ queryKey: ['public-stats'], queryFn: () => api('/api/public/stats'), staleTime: 60_000 })
+  const stats = useQuery<any>({ queryKey: ['public-stats'], queryFn: () => api('/api/public/stats'), staleTime: 60_000, placeholderData: statsSnapshot as any })
 
   // R3F measures its container once; nudge it after the sticky stage has laid out
   useEffect(() => {
