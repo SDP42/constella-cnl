@@ -35,11 +35,59 @@ async def lifespan(_: FastAPI):
         await asyncio.to_thread(pipeline.warm)
     from app.services import scheduler
 
+    if settings.lite:
+        # small hosts (0.1 CPU): compute the heavy pages once, one at a time, before users ask for them
+        asyncio.create_task(asyncio.to_thread(_prewarm))
     stop = asyncio.Event()
     task = asyncio.create_task(scheduler.loop(stop))
     yield
     stop.set()
     await task
+
+
+PREWARM = ["/api/public/stats", "/api/public/network", "/api/dashboard/head", "/api/proof/scorecard", "/api/money/collections",
+           "/api/growth/overview", "/api/bi/overview", "/api/team/overview", "/api/ops/overview", "/api/trust/overview",
+           "/api/geo/territory", "/api/brands", "/api/model/metrics"]
+
+
+def _trim() -> None:
+    """Return freed memory to the OS (glibc keeps it otherwise) — matters on 512 MB instances."""
+    import ctypes
+    import gc
+
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except OSError:  # not glibc (e.g. macOS)
+        pass
+
+
+def _prewarm() -> None:
+    import json
+    import os
+    import time as _t
+    import urllib.request
+
+    base = f"http://127.0.0.1:{os.environ.get('PORT', '8000')}"
+    for _ in range(60):  # wait until uvicorn accepts connections
+        try:
+            urllib.request.urlopen(base + "/api/health", timeout=5)
+            break
+        except Exception:  # noqa: BLE001
+            _t.sleep(2)
+    try:
+        req = urllib.request.Request(base + "/api/auth/login", data=json.dumps({"persona": "rakesh"}).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        token = json.loads(urllib.request.urlopen(req, timeout=60).read())["token"]
+    except Exception:  # noqa: BLE001
+        return
+    for path in PREWARM:
+        try:
+            urllib.request.urlopen(urllib.request.Request(base + path, headers={"Authorization": f"Bearer {token}"}), timeout=120).read()
+        except Exception:  # noqa: BLE001 — best effort
+            pass
+        _trim()
+    print("[constella] prewarm complete", flush=True)
 
 
 app = FastAPI(
@@ -61,6 +109,8 @@ async def guard(request: Request, call_next):
     if path.startswith("/api") and not limiter.allow(ip, "api", settings.rate_limit_per_min):
         return JSONResponse({"detail": "rate limit exceeded"}, status_code=429, headers={"Retry-After": "10"})
     response = await call_next(request)
+    if settings.lite and request.method == "POST":
+        _trim()
     if path.startswith("/api"):
         for k, v in SECURITY_HEADERS.items():
             response.headers.setdefault(k, v)
