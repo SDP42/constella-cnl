@@ -20,8 +20,26 @@ export default function ModelLab() {
         <Stat label="Avg precision" value={g.avg_precision} sub={`base rate ${pct(m.eval_positive_rate, 1)}`} tone="#a16207" />
         <Stat label="Hit rate @5" value={pct(g['hit_rate@5'])} sub="partners with ≥1 correct top-5" tone="#3f7d5c" />
         <Stat label="Recall @5" value={pct(g['recall@5'])} tone="#6b4e71" />
-        <Stat label="Brier score" value={m.brier} sub="calibration (lower is better)" tone="#c2553d" />
+        <Stat label="Brier score" value={m.brier} sub={`uncalibrated ${m.brier_uncalibrated} · ECE ${m.ece}`} tone="#c2553d" />
       </div>
+      {m['gp_capture@5'] && (
+        <div className="pane mt-3 grid gap-4 p-5 md:grid-cols-[1fr_2fr] md:items-center">
+          <div>
+            <p className="label">The metric that matters — gross profit captured in the top 5</p>
+            <p className="num mt-2 text-4xl font-semibold text-gold">{m.gp_capture_lift_vs_popularity}× <span className="text-base font-normal text-ink-soft">vs popularity</span></p>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(m['gp_capture@5']).map(([k, v]: any) => (
+              <div key={k} className="grid grid-cols-[220px_1fr_52px] items-center gap-3 text-sm">
+                <span className="truncate">{({ constella_value_ranked: 'Constella (p × gross profit)', constella_probability_ranked: 'Constella (probability only)', popularity: 'Peer popularity' } as Record<string, string>)[k] ?? k}</span>
+                <div className="h-2.5 rounded-full bg-ink/5"><div className="h-2.5 rounded-full" style={{ width: `${v * 100}%`, background: k === 'popularity' ? '#a8a29e' : '#a16207' }} /></div>
+                <span className="num text-right text-xs">{pct(v)}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs leading-relaxed text-ink-soft md:col-span-2">Of all the gross profit partners actually generated in new categories during the test window, this is the share found in each method's top-5 per partner. Probability alone barely beats “recommend what peers buy” (precision@5 {pct(g['precision@5'])} vs {pct(m.models.popularity['precision@5'])}) — ranking by expected gross profit is what makes the list worth a rep's time. Probabilities are isotonic-calibrated; the top decile still over-predicts (train-window base rate {pct(m.train_positive_rate, 1)} vs test {pct(m.eval_positive_rate, 1)}), which the pilot will re-fit on live data.</p>
+        </div>
+      )}
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <Card title="Against three baselines" sub="Average precision on the same held-out window">
           <div className="h-64">

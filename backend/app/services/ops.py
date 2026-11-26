@@ -132,11 +132,16 @@ def sla_sweep(s: Session) -> list[dict[str, Any]]:
         elif lvl == 2:
             nxt = router.next_best(o.model_dump(), o.lead_rep_id)
             old = reps[o.lead_rep_id].name if o.lead_rep_id in reps else "—"
-            if nxt:
+            if nxt and nxt["id"] != o.lead_rep_id:
                 o.lead_rep_id = nxt["id"]
                 router.load[nxt["id"]] = router.load.get(nxt["id"], 0) + 1
-            detail = f"L2 · Reassigned from {old} to {nxt['name'] if nxt else old}; division head notified"
-            o.status, o.due_by = OppStatus.ASSIGNED, now + timedelta(hours=48)
+                detail = f"L2 · Reassigned from {old} to {nxt['name']}; division head notified"
+                o.status, o.due_by = OppStatus.ASSIGNED, now + timedelta(hours=48)
+            else:
+                # nobody else in the division can take it — skip straight to the head instead of "reassigning" to self
+                lvl = 3
+                detail = f"L3 · No alternative rep for {old} — escalated to {head.name if head else 'National Sales Head'}"
+                o.due_by = now + timedelta(hours=72)
         elif lvl == 3:
             detail = f"L3 · Escalated to {head.name if head else 'National Sales Head'} for review"
             o.due_by = now + timedelta(hours=72)
