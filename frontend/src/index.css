@@ -224,3 +224,10 @@
 
 /* grid/flex children never force the page wider than the viewport */
 main [class*='grid-cols-'] > *, main .grid > * { min-width: 0; }
+
+/* meeting brief: print the account twin cleanly */
+@media print {
+  aside, header, .print\:hidden, canvas { display: none !important; }
+  body { background: #fff; }
+  .pane { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+}

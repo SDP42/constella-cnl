@@ -21,6 +21,10 @@ const Partner = lazy(() => import('./pages/Partner'))
 const CreditCash = lazy(() => import('./pages/CreditCash'))
 const DealDesk = lazy(() => import('./pages/DealDesk'))
 const Annuity = lazy(() => import('./pages/Annuity'))
+const GrowthLab = lazy(() => import('./pages/GrowthLab'))
+const OpsHub = lazy(() => import('./pages/OpsHub'))
+const TeamHub = lazy(() => import('./pages/TeamHub'))
+const DataTrust = lazy(() => import('./pages/DataTrust'))
 
 export default function AppRoutes() {
   const user = useAuth((s) => s.user)
@@ -34,7 +38,7 @@ export default function AppRoutes() {
           ['inbox', <Inbox />], ['command', <Command />], ['accounts', <Accounts />], ['accounts/:id', <AccountTwin />],
           ['solutions', <Solutions />], ['insights', <Insights />], ['brands', <Brands />], ['graph', <Graph />],
           ['model', <ModelLab />], ['pilot', <Pilot />], ['automation', <Automation />], ['data', <DataUnifier />],
-          ['security', <Security />], ['partner', <Partner />], ['credit', <CreditCash />], ['dealdesk', <DealDesk />], ['annuity', <Annuity />],
+          ['security', <Security />], ['partner', <Partner />], ['credit', <CreditCash />], ['dealdesk', <DealDesk />], ['annuity', <Annuity />], ['growth', <GrowthLab />], ['ops', <OpsHub />], ['team', <TeamHub />], ['trust', <DataTrust />],
         ].map(([path, el]) => (
           <Route key={path as string} path={path as string} element={<Suspense fallback={fallback}>{el}</Suspense>} />
         ))}

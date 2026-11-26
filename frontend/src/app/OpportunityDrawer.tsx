@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, Hourglass, Mail, MessageCircle, Scale, Users } from 'lucide-react'
+import { Check, Copy, Hourglass, Languages, Link2, Mail, MessageCircle, Scale, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -25,13 +25,23 @@ export function OpportunityDrawer({ id, onClose }: { id: number | null; onClose:
   const q = useQuery({ queryKey: ['opp', id], queryFn: () => api(`/api/opportunities/${id}`), enabled: !!id })
   const shape = useQuery({ queryKey: ['shape', id], queryFn: () => api(`/api/opportunities/${id}/shape`), enabled: !!id })
   const [tab, setTab] = useState<'whatsapp' | 'email'>('whatsapp')
+  const [lang, setLang] = useState('en')
+  const localPitch = useQuery({ queryKey: ['pitch', id, lang], queryFn: () => api(`/api/opportunities/${id}/pitch?lang=${lang}`), enabled: !!id && lang !== 'en' })
+  const fb = useMutation({
+    mutationFn: (useful: boolean) => api(`/api/opportunities/${id}/feedback`, { method: 'POST', json: { useful, reason: useful ? null : 'Not relevant for this partner' } }),
+    onSuccess: (_, useful) => { toast.success(useful ? 'Thanks — this trains the model' : 'Noted — the model will learn from it'); qc.invalidateQueries({ queryKey: ['opp', id] }) },
+  })
+  const share = useMutation({
+    mutationFn: () => api(`/api/proposals/${id}/share`, { method: 'POST' }),
+    onSuccess: (r) => { const url = `${location.origin}${r.path}`; navigator.clipboard?.writeText(url); toast.success('Partner proposal link copied (valid 14 days)'); window.open(url, '_blank') },
+  })
   const act = useMutation({
     mutationFn: (action: string) => api(`/api/opportunities/${id}/action`, { method: 'POST', json: { action, note: action === 'lose' ? 'Lost on price' : undefined } }),
     onSuccess: (_, action) => { toast.success(`Done: ${action}`); qc.invalidateQueries() },
     onError: (e: any) => toast.error(e.message),
   })
   const o = q.data
-  const pitch = o?.explanation?.pitch?.[tab]
+  const pitch = lang !== 'en' && tab === 'whatsapp' ? localPitch.data?.text : o?.explanation?.pitch?.[tab]
 
   return (
     <Sheet open={!!id} onOpenChange={(v) => !v && onClose()}>
@@ -126,9 +136,16 @@ export function OpportunityDrawer({ id, onClose }: { id: number | null; onClose:
                 <div>
                   <div className="mb-2 flex items-center justify-between">
                     <p className="label">Drafted outreach</p>
+                    <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1 text-xs text-ink-soft"><Languages className="size-3.5" />
+                      <select aria-label="Pitch language" value={lang} onChange={(e) => { setLang(e.target.value); setTab('whatsapp') }} className="rounded-full bg-ink/5 px-2 py-1 text-xs">
+                        {[['en', 'English'], ['hi', 'हिन्दी'], ['mr', 'मराठी'], ['gu', 'ગુજરાતી'], ['ta', 'தமிழ்']].map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                      </select>
+                    </label>
                     <div className="flex gap-1 rounded-full bg-ink/5 p-0.5 text-xs">
                       <button onClick={() => setTab('whatsapp')} className={`flex items-center gap-1 rounded-full px-2.5 py-1 ${tab === 'whatsapp' ? 'bg-white shadow-sm' : ''}`}><MessageCircle className="size-3" />WhatsApp</button>
                       <button onClick={() => setTab('email')} className={`flex items-center gap-1 rounded-full px-2.5 py-1 ${tab === 'email' ? 'bg-white shadow-sm' : ''}`}><Mail className="size-3" />Email</button>
+                    </div>
                     </div>
                   </div>
                   <div className="relative whitespace-pre-wrap rounded-xl bg-white/80 p-3 text-sm">
@@ -146,6 +163,13 @@ export function OpportunityDrawer({ id, onClose }: { id: number | null; onClose:
                   ))}
                 </div>
               )}
+
+              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-ink/[0.03] p-3 text-xs">
+                <span className="mr-auto text-ink-soft">Was this recommendation useful?</span>
+                <button onClick={() => fb.mutate(true)} className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 hover:bg-spec-svc/10"><ThumbsUp className="size-3.5" />Useful</button>
+                <button onClick={() => fb.mutate(false)} className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 hover:bg-danger/10"><ThumbsDown className="size-3.5" />Not relevant</button>
+                {user?.role !== 'partner' && <button onClick={() => share.mutate()} className="flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-white"><Link2 className="size-3.5" />Share proposal link</button>}
+              </div>
 
               <div>
                 <p className="label mb-2">Audit trail</p>

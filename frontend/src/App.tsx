@@ -5,6 +5,7 @@ import { Toaster } from 'sonner'
 import Landing from '@/pages/Landing'
 
 const AppRoutes = lazy(() => import('@/app/AppRoutes'))
+const Proposal = lazy(() => import('@/pages/Proposal'))
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } })
 
@@ -16,6 +17,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/app/*" element={<AppRoutes />} />
+            <Route path="/p/:token" element={<Proposal />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

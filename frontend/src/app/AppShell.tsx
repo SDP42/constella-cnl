@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity, BarChart3, Bot, Boxes, Building2, Clock, Command as CmdIcon, Database, FlaskConical, Gauge, Inbox, LogOut,
-  Gavel, Landmark, Network, Repeat, Search, ShieldCheck, Sparkles, Tags, Workflow,
+  Bell, Fingerprint, Gavel, Keyboard, Landmark, Network, Radar, Repeat, Search, ShieldCheck, Sparkles, Tags, Trophy, Truck, Workflow,
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
@@ -27,6 +27,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     { to: '/app/annuity', label: 'Annuity ledger', icon: <Repeat className="size-4" />, roles: ['head', 'architect', 'rep'] },
   ] },
   { group: 'Intelligence', items: [
+    { to: '/app/growth', label: 'Growth lab', icon: <Radar className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/insights', label: 'BI & forecast', icon: <BarChart3 className="size-4" />, roles: ['head', 'architect', 'steward'] },
     { to: '/app/brands', label: 'Brand portal', icon: <Tags className="size-4" />, roles: ['head', 'architect', 'steward', 'rep'] },
     { to: '/app/graph', label: 'Product universe', icon: <Network className="size-4" />, roles: ['rep', 'head', 'architect', 'steward'] },
@@ -35,6 +36,9 @@ const NAV: { group: string; items: NavItem[] }[] = [
   ] },
   { group: 'Operations', items: [
     { to: '/app/automation', label: 'Automation', icon: <Workflow className="size-4" />, roles: ['head', 'rep', 'architect', 'steward'] },
+    { to: '/app/ops', label: 'Operations hub', icon: <Truck className="size-4" />, roles: ['head', 'architect', 'rep', 'steward'] },
+    { to: '/app/team', label: 'Team hub', icon: <Trophy className="size-4" />, roles: ['head', 'rep'] },
+    { to: '/app/trust', label: 'Data trust', icon: <Fingerprint className="size-4" />, roles: ['head', 'steward', 'architect'] },
     { to: '/app/data', label: 'Data unifier', icon: <Database className="size-4" />, roles: ['steward', 'head'] },
     { to: '/app/security', label: 'Security & audit', icon: <ShieldCheck className="size-4" />, roles: ['head'] },
   ] },
@@ -47,6 +51,10 @@ export function AppShell() {
   const qc = useQueryClient()
   const [cmd, setCmd] = useState(false)
   const [copilot, setCopilot] = useState(false)
+  const [bell, setBell] = useState(false)
+  const [keys, setKeys] = useState(false)
+  const inbox = useQuery({ queryKey: ['bell'], queryFn: () => api('/api/automation/outbox?limit=30'), refetchInterval: 20_000 })
+  const mine = (inbox.data ?? []).filter((o: any) => o.channel === 'in_app' || o.to === user.name).slice(0, 12)
   const meta = useQuery({ queryKey: ['meta'], queryFn: () => api('/api/meta'), refetchInterval: 15_000 })
   const accounts = useQuery({ queryKey: ['acc-search'], queryFn: () => api('/api/accounts?limit=600&sort=name'), enabled: cmd && user.role !== 'partner' })
 
@@ -54,6 +62,13 @@ export function AppShell() {
     const k = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmd((v) => !v) }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); setCopilot((v) => !v) }
+      const typing = (e.target as HTMLElement)?.closest?.('input,textarea,select,[contenteditable]')
+      if (!typing && e.key === '?') setKeys((v) => !v)
+      if (!typing && e.key.toLowerCase() === 'g') (window as any).__g = Date.now()
+      if (!typing && (window as any).__g && Date.now() - (window as any).__g < 800) {
+        const map: Record<string, string> = { i: '/app/inbox', c: '/app/command', a: '/app/accounts', l: '/app/growth', d: '/app/dealdesk', t: '/app/team' }
+        if (map[e.key.toLowerCase()]) { nav(map[e.key.toLowerCase()]); (window as any).__g = 0 }
+      }
     }
     addEventListener('keydown', k)
     return () => removeEventListener('keydown', k)
@@ -125,6 +140,22 @@ export function AppShell() {
                 +24h ⏩
               </button>
             )}
+            <div className="relative">
+              <button onClick={() => setBell((v) => !v)} aria-label="Notifications" className="relative grid size-9 place-items-center rounded-full bg-white/80 hover:bg-white">
+                <Bell className="size-4" />{mine.length > 0 && <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-gold-bright text-[9px] font-bold">{mine.length}</span>}
+              </button>
+              {bell && (
+                <div className="absolute right-0 top-11 z-40 w-80 rounded-2xl border border-ink/5 bg-white p-2 shadow-2xl">
+                  <p className="px-2 py-1 text-xs font-semibold">Notifications</p>
+                  <ul className="max-h-96 overflow-y-auto">
+                    {mine.length ? mine.map((o: any) => (
+                      <li key={o.id} className="rounded-xl px-2 py-2 text-xs hover:bg-pearl"><div className="font-medium">{o.subject}</div><div className="line-clamp-2 text-ink-soft">{o.body}</div></li>
+                    )) : <li className="px-2 py-4 text-xs text-ink-soft">You're all caught up.</li>}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setKeys(true)} aria-label="Keyboard shortcuts" className="hidden size-9 place-items-center rounded-full bg-white/80 hover:bg-white md:grid"><Keyboard className="size-4" /></button>
             <button onClick={() => setCopilot(true)}
               className="flex items-center gap-2 rounded-full bg-[#1c1917] px-4 py-2 text-sm font-medium text-white shadow-[0_8px_24px_-10px_rgba(11,14,34,.8)] transition-transform hover:scale-[1.03]">
               <Bot className="size-4" /> Copilot <kbd className="hidden rounded bg-white/15 px-1 font-mono text-[10px] sm:inline">⌘J</kbd>
@@ -155,6 +186,18 @@ export function AppShell() {
         </CommandList>
       </CommandDialog>
       <Copilot open={copilot} onOpenChange={setCopilot} />
+      {keys && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm" onClick={() => setKeys(false)}>
+          <div className="pane w-[min(420px,92vw)] p-6" onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg font-semibold">Keyboard shortcuts</p>
+            <ul className="mt-4 space-y-2 text-sm">
+              {[['⌘ K', 'Search partners & screens'], ['⌘ J', 'Open the voice copilot'], ['g then i', 'Mission inbox'], ['g then c', 'Command center'], ['g then a', 'Account twins'], ['g then l', 'Growth lab'], ['g then d', 'Deal desk'], ['g then t', 'Team hub'], ['?', 'Toggle this panel']].map(([k, v]) => (
+                <li key={k} className="flex justify-between"><span>{v}</span><kbd className="rounded-md bg-ink/5 px-2 py-0.5 font-mono text-xs">{k}</kbd></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

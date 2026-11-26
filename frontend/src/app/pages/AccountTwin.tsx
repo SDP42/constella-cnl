@@ -1,4 +1,4 @@
-import { ArrowLeft, Database, Radio, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Database, Printer, Radio, ShieldCheck, Users2 } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -13,6 +13,7 @@ const TwinStack = lazy(() => import('@/components/three/TwinStack').then((m) => 
 export default function AccountTwin() {
   const { id } = useParams()
   const d = useApi<any>(['twin', id], `/api/accounts/${id}`)
+  const look = useApi<any>(['look', id], `/api/accounts/${id}/lookalikes`)
   const [open, setOpen] = useState<number | null>(null)
   const t = d.data
   if (!t) return <Page title="Loading…"><Loading rows={8} /></Page>
@@ -28,7 +29,10 @@ export default function AccountTwin() {
   return (
     <Page kicker={<Link to="/app/accounts" className="flex items-center gap-1 hover:text-ink"><ArrowLeft className="size-3" />Account twins</Link>}
       title={a.name}
-      actions={<span className="rounded-full bg-white px-3 py-1.5 text-xs text-ink-soft">{titleCase(a.type)} · {titleCase(a.vertical)} · {a.city} · GSTIN {a.gstin}</span>}>
+      actions={<>
+        <span className="rounded-full bg-white px-3 py-1.5 text-xs text-ink-soft">{titleCase(a.type)} · {titleCase(a.vertical)} · {a.city} · GSTIN {a.gstin}</span>
+        <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-white print:hidden"><Printer className="size-3.5" />Meeting brief</button>
+      </>}>
       <div className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
         <Card title="The twin" sub="One disc per CNL division · solid = buys today · glass = whitespace (pulses with model probability) · drag to rotate" pad={false}>
           <Suspense fallback={<div className="h-[380px]" />}>
@@ -115,6 +119,16 @@ export default function AccountTwin() {
             </ul>
             <p className="mt-3 flex items-center gap-1.5 text-[11px] text-ink-soft"><ShieldCheck className="size-3.5" />PII masked for your role</p>
           </Card>
+          {look.data && (
+            <Card title={<span className="flex items-center gap-2"><Users2 className="size-4" />Lookalike partners</span>} sub="Most similar buying patterns (cosine on category spend) — and what they buy that this partner doesn't">
+              <ul className="space-y-1.5 text-sm">
+                {look.data.similar.slice(0, 5).map((l: any) => <li key={l.id} className="flex justify-between"><Link to={`/app/accounts/${l.id}`} className="truncate hover:text-gold">{l.name}</Link><span className="num text-xs text-ink-soft">{pct(l.similarity)} similar</span></li>)}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {look.data.whitespace.map((w: any) => <span key={w.category} className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] text-gold">{w.label} · {w.lookalikes_buying} lookalikes</span>)}
+              </div>
+            </Card>
+          )}
           <Card title={<span className="flex items-center gap-2"><Radio className="size-4" />Signals & conversations</span>}>
             <ul className="max-h-72 space-y-2.5 overflow-y-auto pr-1 text-sm">
               {t.signals.slice(0, 10).map((s: any) => (
