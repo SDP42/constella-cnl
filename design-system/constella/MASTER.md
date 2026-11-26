@@ -1,3 +1,20 @@
+# Constella — Design System (MASTER, v4 "Night Atlas · Stone & Gold")
+
+> v4 supersedes v3 below. Chosen after user feedback (no grids, no Bauhaus/retro, no glass prism, "realistic").
+> Palette from UI UX Pro Max `--domain color` row **Luxury/Premium Brand** (premium black + gold accent),
+> anchored to CNL's yellow logo.
+
+- **Landing**: one realistic 3D object — a night-side globe facing India with gold partner-city lights and
+  routing arcs; scroll zooms orbit → India → Pune (three chapters, sticky stage, smooth camera damping).
+- **App**: warm stone canvas `#F7F5F1`, ink `#1C1917`, warm-black sidebar, gold accent `#A16207` (text) /
+  `#F5B700` (fills). Division inks are muted and realistic: EB slate `#3E5C76`, Brands gold `#C99A2E`,
+  Gadgets terracotta `#C2553D`, Consumer plum `#6B4E71`, Annuity sage `#3F7D5C`.
+- **3D in-app**: account-twin disc stack, product-universe graph. **Every metric card carries a
+  "How this is calculated & why it matters" panel.**
+- Type: DM Sans (Premium Sans pairing) + JetBrains Mono for figures.
+
+---
+
 # Constella — Design System (MASTER, v3 "Liquid Glass Prism")
 
 Chosen by the user from three skill-backed options (v1 paper atlas and v2 Bauhaus were rejected as
