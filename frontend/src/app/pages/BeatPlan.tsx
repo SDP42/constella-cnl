@@ -1,5 +1,5 @@
-import * as maplibregl from 'maplibre-gl'
-import type { Map as MLMap } from 'maplibre-gl'
+import { maplibregl } from '@/lib/maplibre'
+import type { MLMap } from '@/lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Car, Clock, MapPin, Route } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -42,6 +42,7 @@ export default function BeatPlan() {
   }, [!!x?.stops?.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!x) return <Page title="Beat plan"><Loading rows={6} /></Page>
+  if (!x.stops?.length) return <Page kicker={`Work · field day · ${x.rep?.name ?? ''}`} title="Today's beat plan"><Card title="No field visits today"><p className="text-sm text-ink-soft">{x.note ?? 'There are no open opportunities to visit for this seat today.'}</p></Card></Page>
   const sm = x.summary
   return (
     <Page kicker={`Work · field day · ${x.rep.name} · ${x.city}`} title="Today's beat plan">

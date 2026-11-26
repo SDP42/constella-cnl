@@ -161,13 +161,18 @@ def beat(rep_id: int | None = None, s: Session = Depends(get_session), p: Princi
     from app.models import OPEN_STATUSES, Opportunity, SalesRep
     from app.services.fieldmoney import beat_plan
 
+    def open_for(r_id: int) -> list[dict]:
+        return [o.model_dump() for o in s.exec(select(Opportunity).where(Opportunity.lead_rep_id == r_id)).all() if o.status in OPEN_STATUSES]
+
     rid = rep_id or p.rep_id
-    if rid is None:  # heads/architects: show the busiest rep's day
-        rid = max(((r.id, len(s.exec(select(Opportunity.id).where(Opportunity.lead_rep_id == r.id)).all())) for r in s.exec(select(SalesRep)).all()), key=lambda x: x[1])[0]
+    opps = open_for(rid) if rid else []
+    if not opps and p.can("read:all"):  # heads/architects/stewards: show the busiest field rep's day
+        counts = {r.id: len(open_for(r.id)) for r in s.exec(select(SalesRep).where(SalesRep.role == "rep")).all()}
+        rid = max(counts, key=counts.get)
+        opps = open_for(rid)
     if not p.can("read:all") and p.rep_id != rid:
         raise HTTPException(403, "you can only plan your own day")
     rep = s.get(SalesRep, rid)
-    opps = [o.model_dump() for o in s.exec(select(Opportunity).where(Opportunity.lead_rep_id == rid)).all() if o.status in OPEN_STATUSES]
     accs = {a.id: a.model_dump() for a in s.exec(select(Account)).all()}
     start = _dt.combine(state.now.date(), _dt.min.time()).replace(hour=10)
     return {"rep": {"id": rep.id, "name": rep.name, "division": rep.division_code, "region": rep.region}, **beat_plan(rep.model_dump(), opps, accs, start)}
