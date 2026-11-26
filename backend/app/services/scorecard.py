@@ -99,7 +99,7 @@ def build(s: Session, frames: dict[str, pd.DataFrame]) -> dict[str, Any]:
             E("Cleaning rules", "GSTIN mod-36 check · PAN rescue · fuzzy name within city", "DPDP consent + retention per contact"),
         ], [["Data unifier", "/app/data"], ["Data trust", "/app/trust"], ["Account twins", "/app/accounts"]],
             "Entity resolution: exact GSTIN → PAN (chars 3–12) → rapidfuzz token-set ≥ 0.88 within the same city; ground truth is kept in the synthetic world so precision/recall are measured, not claimed."),
-        pt(2, "Detect the opportunity", "Identify what each account needs next, from single products to full solutions; justify the technique and measure accuracy.", "partial" if False else "met", [
+        pt(2, "Detect the opportunity", "Identify what each account needs next, from single products to full solutions; justify the technique and measure accuracy.", "met", [
             E("Back-test AUC (time split, 120 days)", gbm.get("auc", "—"), f"popularity baseline {pop.get('auc', '—')}"),
             E("Precision@5", gbm.get("precision@5", "—"), f"popularity {pop.get('precision@5', '—')} — value ranking is the edge"),
             E("Gross profit captured in top 5", f"{round(100 * (m.get('gp_capture@5') or {}).get('constella_value_ranked', 0))}%",
