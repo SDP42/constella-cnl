@@ -29,6 +29,12 @@ The landing section "Solutions in the field" uses 132 frames (22 per clip, 1152 
 | Hybrid Meeting Room | Woman using a laptop at the office, #7224727 | MART PRODUCTION |
 | Network + annuity | Blue coloured cables, #1085656 | Dima Krivoy |
 
+The same six clips are the backgrounds of the story scenes in the pitch video (`deliverables/Constella_PS1_Pitch.mp4`).
+
+### Pitch video voiceover
+
+The female narration is synthesised locally with **Kokoro-82M** (voice `af_heart`) through `kokoro-onnx`; the model and its voices are released under the **Apache-2.0** licence. The live part of the video is a screen capture of the Constella prototype itself.
+
 ## 2. Indian open data (demand side: who could buy what, where)
 
 | Dataset | Source | Licence | Use in Constella |

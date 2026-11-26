@@ -26,3 +26,6 @@ dist/
 backend/data/models/
 backend/data/model.joblib
 backend/data/warm.joblib
+
+# pitch video lives on Google Drive (too large for git)
+deliverables/*.mp4
