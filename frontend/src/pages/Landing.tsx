@@ -7,6 +7,7 @@ import { Aura } from '@/components/Aura'
 import { Glyph, GlyphRow, DIV_HEX, type DivCode } from '@/components/Glyph'
 import { AppPreview } from '@/components/landing/AppPreview'
 import { ConstellationStory } from '@/components/landing/ConstellationStory'
+import { OrbitHero } from '@/components/landing/OrbitHero'
 import CountUp from '@/components/reactbits/CountUp'
 import { api, login } from '@/lib/api'
 import { homeFor, type Role } from '@/lib/auth'
@@ -120,6 +121,9 @@ export default function Landing() {
           </button>
         </div>
       </header>
+
+      {/* real NASA footage, scroll-scrubbed: orbit → India */}
+      <OrbitHero />
 
       {/* cinematic 3D flight through the partner network (sticky stage, scroll-scrubbed) */}
       <section id="flight" ref={flightRef} className="relative h-[400vh] bg-night" aria-label="Flight through CNL's partner network">

@@ -237,3 +237,6 @@ main [class*='grid-cols-'] > *, main .grid > * { min-width: 0; }
 .maplibregl-ctrl-attrib.maplibregl-compact { font-size: 10px; }
 .poi-pop .maplibregl-popup-content { background: #0c0a09; color: #fff; border-radius: 12px; padding: 6px 10px; font-size: 11px; }
 .poi-pop .maplibregl-popup-tip { display: none; }
+
+/* film grain for real-footage sections */
+.grain { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); mix-blend-mode: overlay; }

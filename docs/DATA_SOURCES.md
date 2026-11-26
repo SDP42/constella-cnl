@@ -16,6 +16,12 @@ The GIBS endpoint pattern is `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best
 
 The backend proxies and caches Overpass for 24 h, so the public instance is not hammered. If Overpass is unreachable, it falls back to a deterministic synthetic POI set.
 
+### Footage
+
+| Asset | Source | Licence | Use |
+|---|---|---|---|
+| 120 frames (1280×720 JPEG, ~3.9 MB) from "Earth Views from the International Space Station" (HDEV camera, NASA HQ, 2019) | images.nasa.gov, NASA ID `Earth Views from the International Space Station` | NASA media, not copyrighted (no endorsement implied, credit NASA) | Scroll-scrubbed landing hero (`frontend/public/frames/orbit`) |
+
 ## 2. Indian open data (demand side: who could buy what, where)
 
 | Dataset | Source | Licence | Use in Constella |
