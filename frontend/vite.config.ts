@@ -12,11 +12,12 @@ export default defineConfig({
       '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, ws: true },
     },
   },
+  optimizeDeps: { exclude: ['maplibre-gl'] },
   build: {
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
-        manualChunks: { three: ['three', '@react-three/fiber', '@react-three/drei', '@react-three/postprocessing'] },
+        manualChunks: (id: string) => (/node_modules\/(\.pnpm\/)?(three|@react-three)/.test(id) ? 'three' : id.includes('maplibre-gl') ? 'maplibre' : undefined),
       },
     },
   },
