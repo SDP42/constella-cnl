@@ -35,7 +35,11 @@
   "/api/solutions",
   "/api/team/overview",
   "/api/trust/overview",
-  "/api/work/beat"
+  "/api/work/beat",
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ],
  "arjun": [
   "/api/accounts/1",
@@ -74,7 +78,11 @@
   "/api/solutions",
   "/api/team/overview",
   "/api/trust/overview",
-  "/api/work/beat"
+  "/api/work/beat",
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ],
  "rakesh": [
   "/api/accounts/1",
@@ -118,7 +126,15 @@
   "/api/solutions",
   "/api/team/overview",
   "/api/trust/overview",
-  "/api/work/beat"
+  "/api/work/beat",
+  {
+   "post": "/api/pilot/simulate",
+   "body": "{\"action_rate\":0.65,\"uplift_scale\":1,\"runs\":300}"
+  },
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ],
  "meera": [
   "/api/accounts/1",
@@ -161,7 +177,11 @@
   "/api/solutions",
   "/api/team/overview",
   "/api/trust/overview",
-  "/api/work/beat"
+  "/api/work/beat",
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ],
  "neha": [
   "/api/accounts/1",
@@ -205,7 +225,11 @@
   "/api/solutions",
   "/api/team/overview",
   "/api/trust/overview",
-  "/api/work/beat"
+  "/api/work/beat",
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ],
  "vikram": [
   "/api/accounts/1",
@@ -241,6 +265,10 @@
   "/api/schemes/progress?limit=5",
   "/api/solutions",
   "/api/team/overview",
-  "/api/trust/overview"
+  "/api/trust/overview",
+  {
+   "post": "/api/team/commission",
+   "body": "{\"lead_share\":0.7,\"rate_hardware\":0.01,\"rate_annuity\":0.04}"
+  }
  ]
 }

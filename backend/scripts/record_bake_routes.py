@@ -15,6 +15,7 @@ ROUTES = ["inbox", "command", "accounts", "accounts/1", "solutions", "insights",
           "security", "partner", "credit", "dealdesk", "annuity", "growth", "ops", "team", "trust", "territory", "site/1", "learning",
           "scorecard", "beat", "collections"]
 PERSONAS = ["priya", "arjun", "rakesh", "meera", "neha", "vikram"]
+PURE_POST = ("/api/pilot/simulate", "/api/geo/demand", "/api/ai/intent", "/api/team/commission", "/api/solutions/compose")
 OUT = Path(__file__).resolve().parents[1] / "app" / "bake_routes.json"
 
 
@@ -41,12 +42,14 @@ async def main():
             ctx = await b.new_context(viewport={"width": 1440, "height": 900})
             await ctx.add_init_script(f"sessionStorage.setItem('constella-session', JSON.stringify({{state: {tok}, version: 0}}))")
             pg = await ctx.new_page()
-            seen = set()
+            seen, posts = set(), {}
             pg.on("response", lambda r, s=seen: s.add(r.url.split(WEB)[-1]) if "/api/" in r.url and r.request.method == "GET" and r.status == 200 else None)
+            pg.on("response", lambda r, d=posts: d.__setitem__((r.url.split(WEB)[-1], r.request.post_data or ""), 1)
+                  if r.request.method == "POST" and r.url.split(WEB)[-1].split("?")[0] in PURE_POST and r.status == 200 else None)
             for rt in ROUTES:
                 await pg.goto(f"{WEB}/app/{rt}", wait_until="load")
                 await pg.wait_for_timeout(2500)
-            out[persona] = sorted(u for u in seen if not u.startswith(("/api/auth", "/api/health")))
+            out[persona] = sorted(u for u in seen if not u.startswith(("/api/auth", "/api/health"))) + [{"post": p, "body": b} for p, b in sorted(posts)]
             print(persona, len(out[persona]), flush=True)
             await ctx.close()
         await b.close()

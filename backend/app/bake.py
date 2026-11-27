@@ -51,9 +51,14 @@ def bake() -> None:
     for persona, paths in routes.items():
         auth = {} if persona == "public" else {"Authorization": "Bearer " + client.post("/api/auth/login", json={"persona": persona}).json()["token"]}
         ok = 0
-        for p in paths:
+        for p in paths:  # "GET path" strings, or {"post": path, "body": json-text} for the pure calculators
             for enc in ("gzip, deflate", "identity"):
-                ok += client.get(p, headers={**auth, "Accept-Encoding": enc}).status_code == 200
+                h = {**auth, "Accept-Encoding": enc}
+                if isinstance(p, dict):
+                    r = client.post(p["post"], content=p["body"].encode(), headers={**h, "Content-Type": "application/json"})
+                else:
+                    r = client.get(p, headers=h)
+                ok += r.status_code == 200
         print(f"[bake] {persona}: {ok}/{2 * len(paths)} responses cached", flush=True)
     with Session(engine) as s:  # the replay is not real user activity: keep the audit log clean
         for row in s.exec(select(AuditLog).where(AuditLog.id > audit_before)).all():
