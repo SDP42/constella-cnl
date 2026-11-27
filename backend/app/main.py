@@ -122,7 +122,7 @@ async def guard(request: Request, call_next):
             hit = respcache.get(rc_key)
             if hit:
                 status, headers, body = hit
-                response = Response(content=body, status_code=status, headers=headers)
+                response = Response(content=body, status_code=status, headers={**headers, "X-Cache": "hit"})
                 c = respcache.claims_of(auth)
                 if c:  # keep the audit trail complete for cached sensitive reads
                     request.state.principal = Principal(sub=c["sub"], name=c["name"], role=c["role"], rep_id=c.get("rep_id"),
