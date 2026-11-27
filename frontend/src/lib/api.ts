@@ -29,7 +29,22 @@ function slowNotice() {
 export async function api<T = any>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const t = slowNotice()
   try {
-    return await apiInner<T>(path, init)
+    // While Render wakes from sleep the proxy answers 502/503/504 (or the fetch fails) in under a second, before the
+    // request reaches the app, so retrying is safe. Keep trying for ~90 s with the wake notice up.
+    const until = Date.now() + 90_000
+    for (let wait = 1500; ; wait = Math.min(wait * 1.5, 6000)) {
+      try {
+        return await apiInner<T>(path, init)
+      } catch (e) {
+        const waking = !(e instanceof ApiError) || [502, 503, 504].includes(e.status)
+        if (!waking || Date.now() + wait > until) throw e
+        if (!wakeNoticeShown) {
+          wakeNoticeShown = true
+          toast.loading('Waking the free-tier server… the first load can take up to a minute', { id: 'wake', duration: 90_000 })
+        }
+        await new Promise((r) => setTimeout(r, wait))
+      }
+    }
   } finally {
     clearTimeout(t)
     if (wakeNoticeShown) toast.dismiss('wake')
