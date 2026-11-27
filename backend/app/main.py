@@ -114,7 +114,9 @@ async def guard(request: Request, call_next):
         return JSONResponse({"detail": "rate limit exceeded"}, status_code=429, headers={"Retry-After": "10"})
     # read cache: identical GETs by the same verified caller are replayed instead of recomputed (see core/respcache.py)
     response, rc_key = None, None
-    if respcache.cacheable(request.method, path) and "origin" not in request.headers:
+    origin = request.headers.get("origin")
+    # same-site calls (no Origin, or our own allowed site, which browsers add to POSTs) may use the cache
+    if respcache.cacheable(request.method, path) and (origin is None or origin in settings.cors_origins):
         auth = request.headers.get("authorization")
         who = respcache.identity(auth)
         if who is not None:
@@ -123,7 +125,10 @@ async def guard(request: Request, call_next):
             hit = respcache.get(rc_key)
             if hit:
                 status, headers, body = hit
-                response = Response(content=body, status_code=status, headers={**headers, "X-Cache": "hit"})
+                extra = {"X-Cache": "hit"}
+                if origin:  # what CORSMiddleware would add for an allowed origin
+                    extra |= {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true", "Vary": "Origin"}
+                response = Response(content=body, status_code=status, headers={**headers, **extra})
                 c = respcache.claims_of(auth)
                 if c:  # keep the audit trail complete for cached sensitive reads
                     request.state.principal = Principal(sub=c["sub"], name=c["name"], role=c["role"], rep_id=c.get("rep_id"),
