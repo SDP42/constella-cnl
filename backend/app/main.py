@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -40,10 +41,34 @@ async def lifespan(_: FastAPI):
         # small hosts (0.1 CPU): compute the heavy pages once, one at a time, before users ask for them
         asyncio.create_task(asyncio.to_thread(_prewarm))
     stop = asyncio.Event()
+    if os.environ.get("RENDER_EXTERNAL_URL"):
+        asyncio.create_task(_stay_awake(os.environ["RENDER_EXTERNAL_URL"], stop))
     task = asyncio.create_task(scheduler.loop(stop))
     yield
     stop.set()
     await task
+
+
+async def _stay_awake(base: str, stop: asyncio.Event) -> None:
+    """Render's free plan sleeps after 15 idle minutes, and GitHub's scheduled pings fire too rarely to prevent it.
+    A request to our own public URL goes through Render's proxy and counts as traffic, so ping it every 10 minutes
+    during Indian daytime (08:00-23:30 IST, 02:30-18:00 UTC; about 480 of the 750 free hours a month). Outside that
+    window the server sleeps; the web app retries while it wakes."""
+    import datetime as dt
+    import urllib.request
+
+    while not stop.is_set():
+        now = dt.datetime.now(dt.timezone.utc)
+        minute = now.hour * 60 + now.minute
+        if 150 <= minute < 1080:
+            try:
+                await asyncio.to_thread(lambda: urllib.request.urlopen(base.rstrip("/") + "/api/health", timeout=30).read())
+            except Exception as e:  # noqa: BLE001
+                print("[constella] keep-awake ping failed:", e, flush=True)
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=600)
+        except asyncio.TimeoutError:
+            pass
 
 
 PREWARM = ["/api/public/stats", "/api/public/network", "/api/dashboard/head", "/api/proof/scorecard", "/api/money/collections",
