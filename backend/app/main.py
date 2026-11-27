@@ -118,7 +118,8 @@ async def guard(request: Request, call_next):
         auth = request.headers.get("authorization")
         who = respcache.identity(auth)
         if who is not None:
-            rc_key = respcache.key(path, request.url.query, who, "gzip" in request.headers.get("accept-encoding", ""))
+            body_in = await request.body() if request.method == "POST" else b""
+            rc_key = respcache.key(path, request.url.query, who, "gzip" in request.headers.get("accept-encoding", ""), body_in)
             hit = respcache.get(rc_key)
             if hit:
                 status, headers, body = hit
@@ -134,7 +135,7 @@ async def guard(request: Request, call_next):
             keep = {k: v for k, v in response.headers.items() if k.lower() in ("content-type", "content-encoding", "vary")}
             respcache.put(rc_key, 200, keep, body)
             response = Response(content=body, status_code=200, headers=dict(response.headers))
-    if request.method in ("POST", "PUT", "PATCH", "DELETE") and path != "/api/auth/login":
+    if respcache.is_write(request.method, path):
         respcache.clear()  # any write may change what reads return
     if settings.lite and request.method == "POST":
         _trim()

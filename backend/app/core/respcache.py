@@ -6,7 +6,7 @@ replayed until data changes:
 
 * keyed by method + path + query + the *verified* caller (role, rep, region, account), so roles never share answers
   and a forged token cannot read cached data (the signature is checked before any lookup);
-* any write request (POST / PATCH / DELETE) clears the whole cache, so a user always sees the result of their action;
+* any write request (POST / PATCH / DELETE, except the pure calculators in ``PURE_POST``) clears the whole cache, so a user always sees the result of their action;
 * entries filled at run time expire after ``TTL_S``; entries baked at build time (``app.bake``) stay until the first write;
 * never cached: auth, health, copilot / agent, audit and security reads, WebSocket, non-200 or large responses.
 """
@@ -22,6 +22,9 @@ from app.core.security import verify_token
 TTL_S = 300
 MAX_BODY = 2_000_000
 SKIP = ("/api/auth", "/api/health", "/api/ws", "/api/agent", "/api/copilot", "/api/audit", "/api/security")
+# POST endpoints that only calculate (checked: no database writes). They neither clear the cache nor need a fresh answer
+# every time, so they are cached too, keyed by their request body.
+PURE_POST = ("/api/pilot/simulate", "/api/geo/demand", "/api/ai/intent", "/api/team/commission", "/api/solutions/compose")
 _store: dict[str, tuple[float | None, int, dict[str, str], bytes]] = {}
 
 
@@ -45,13 +48,19 @@ def claims_of(authorization: str | None) -> dict[str, Any] | None:
         return None
 
 
-def key(path: str, query: str, who: str, gzip: bool) -> str:
-    raw = f"GET {path}?{'&'.join(sorted(query.split('&'))) if query else ''}|{who}|{'gz' if gzip else 'id'}"
+def key(path: str, query: str, who: str, gzip: bool, body: bytes = b"") -> str:
+    raw = f"{hashlib.sha1(body).hexdigest() if body else 'GET'} {path}?{'&'.join(sorted(query.split('&'))) if query else ''}|{who}|{'gz' if gzip else 'id'}"
     return hashlib.sha1(raw.encode()).hexdigest()
 
 
 def cacheable(method: str, path: str) -> bool:
+    if method == "POST":
+        return path in PURE_POST
     return method == "GET" and path.startswith("/api/") and not path.startswith(SKIP)
+
+
+def is_write(method: str, path: str) -> bool:
+    return method in ("POST", "PUT", "PATCH", "DELETE") and path != "/api/auth/login" and path not in PURE_POST
 
 
 def get(k: str) -> tuple[int, dict[str, str], bytes] | None:
