@@ -16,10 +16,8 @@ export default defineConfig({
   worker: { format: 'es' },
   build: {
     chunkSizeWarningLimit: 1600,
-    rollupOptions: {
-      output: {
-        manualChunks: (id: string) => (/node_modules\/(\.pnpm\/)?(three|@react-three)/.test(id) ? 'three' : id.includes('maplibre-gl') ? 'maplibre' : undefined),
-      },
-    },
+    // No manual chunks: three.js and MapLibre are only reached through lazy imports, so the bundler already splits
+    // them out. A manual rule here also dragged shared modules (React internals, stores) into the 3D chunk, which
+    // forced every page, even the inbox, to download all of three.js up front.
   },
 })
