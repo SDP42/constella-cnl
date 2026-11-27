@@ -163,6 +163,10 @@ def warm(verbose: bool = True, use_baked: bool = True) -> None:
             run = s.exec(select(ModelRun).order_by(ModelRun.id.desc())).first()
         state.model, state.metrics, state.live, state.cooc = model, model.metrics, baked["live"], baked["cooc"]
         state.cache = baked["cache"]
+        if baked.get("resp"):
+            from app.core import respcache
+
+            respcache.load(baked["resp"])
         state.resolution = (run.metrics or {}).get("resolution", {}) if run else {}
         if verbose:
             print(f"[constella] warmed from build-time bake ({len(state.cache)} cached results)", flush=True)
@@ -304,4 +308,8 @@ def simulate_lifecycle(s: Session, opps: list[dict[str, Any]], router: Router, a
 
 if __name__ == "__main__":
     print(build())
+    if settings.lite:  # small hosts: also pre-compute the heavy pages here, so no extra build step is needed
+        from app.bake import bake
+
+        bake()
     _ = C  # catalogue import kept for side-effect-free reference
