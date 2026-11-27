@@ -10,13 +10,14 @@ from pathlib import Path
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlmodel import Session
 
 from app.api import accounts, agent, automation, finance, geo, insights, labs, opportunities, platform
 from app.core.config import get_settings
 from app.core.db import engine, init_db
-from app.core.security import SECURITY_HEADERS, limiter
+from app.core import respcache
+from app.core.security import SECURITY_HEADERS, Principal, limiter
 from app.models import AuditLog
 from app.state import state
 
@@ -111,7 +112,30 @@ async def guard(request: Request, call_next):
         return await call_next(request)
     if path.startswith("/api") and not limiter.allow(ip, "api", settings.rate_limit_per_min):
         return JSONResponse({"detail": "rate limit exceeded"}, status_code=429, headers={"Retry-After": "10"})
-    response = await call_next(request)
+    # read cache: identical GETs by the same verified caller are replayed instead of recomputed (see core/respcache.py)
+    response, rc_key = None, None
+    if respcache.cacheable(request.method, path) and "origin" not in request.headers:
+        auth = request.headers.get("authorization")
+        who = respcache.identity(auth)
+        if who is not None:
+            rc_key = respcache.key(path, request.url.query, who, "gzip" in request.headers.get("accept-encoding", ""))
+            hit = respcache.get(rc_key)
+            if hit:
+                status, headers, body = hit
+                response = Response(content=body, status_code=status, headers=headers)
+                c = respcache.claims_of(auth)
+                if c:  # keep the audit trail complete for cached sensitive reads
+                    request.state.principal = Principal(sub=c["sub"], name=c["name"], role=c["role"], rep_id=c.get("rep_id"),
+                                                        region=c.get("region"), account_id=c.get("account_id"))
+    if response is None:
+        response = await call_next(request)
+        if rc_key and response.status_code == 200:
+            body = b"".join([chunk async for chunk in response.body_iterator])
+            keep = {k: v for k, v in response.headers.items() if k.lower() in ("content-type", "content-encoding", "vary")}
+            respcache.put(rc_key, 200, keep, body)
+            response = Response(content=body, status_code=200, headers=dict(response.headers))
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and path != "/api/auth/login":
+        respcache.clear()  # any write may change what reads return
     if settings.lite and request.method == "POST":
         _trim()
     if path.startswith("/api"):
