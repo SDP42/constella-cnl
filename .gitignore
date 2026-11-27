@@ -29,3 +29,6 @@ backend/data/warm.joblib
 
 # pitch video lives on Google Drive (too large for git)
 deliverables/*.mp4
+# final deck includes team contact details: kept local / on Google Drive, not in git
+deliverables/Constella_PS1_Deck.pptx
+deliverables/Constella_PS1_Deck.pdf
