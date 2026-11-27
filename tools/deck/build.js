@@ -104,6 +104,7 @@ const qr = async (url) => (await QR.toDataURL(url, { margin: 0, width: 360, colo
     })
   }
   const kp = pilot.kpis, pct = (k) => Math.round(kp[k].uplift_pct)
+  const photo = (ini) => { const f = path.join(__dirname, 'img', 'team', ini + '.png'); return require('fs').existsSync(f) ? f : null }
   const WINS = { 'Swayam Panchal': 5, 'Jeevesh Bodhani': 10, 'Rishit Lahoti': 10, 'Shreyas Kale': 9 }
 
   // ================================================================ 1 · TITLE (cover)
@@ -592,7 +593,11 @@ const qr = async (url) => (await QR.toDataURL(url, { margin: 0, width: 360, colo
   for (let i = 0; i < 4; i++) {
     const x = 4.92 + (i % 2) * 1.85, y = 1.6 + Math.floor(i / 2) * 1.2
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 1.78, h: 1.1, rectRadius: 0.05, fill: { color: 'FFFFFF' }, line: { color: K.purple, width: 0.75 }, objectName: 'tm' + i })
-    await dot(s, fa.FaUserCircle, x + 0.64, y + 0.08, 0.5, K.purple, team[i])
+    const tini = team[i].split(' ').map((p) => p[0]).join('')
+    if (photo(tini)) {
+      s.addShape(pres.shapes.OVAL, { x: x + 0.6, y: y + 0.04, w: 0.58, h: 0.58, fill: { color: K.purple }, line: { color: K.purple, width: 0 }, objectName: 'tring' + i })
+      s.addImage({ path: photo(tini), x: x + 0.63, y: y + 0.07, w: 0.52, h: 0.52, altText: 'Photo of ' + team[i], objectName: 'tphoto' + i })
+    } else await dot(s, fa.FaUserCircle, x + 0.64, y + 0.08, 0.5, K.purple, team[i])
     T(s, team[i], { x: x + 0.04, y: y + 0.62, w: 1.7, h: 0.26, fontSize: 11.5, bold: true, align: 'center', valign: 'middle' })
     T(s, `${WINS[team[i]]}× hackathon winner`, { x: x + 0.04, y: y + 0.86, w: 1.7, h: 0.2, fontSize: 8.5, italic: true, color: K.purple, align: 'center', valign: 'middle' })
   }
@@ -625,8 +630,9 @@ const qr = async (url) => (await QR.toDataURL(url, { margin: 0, width: 360, colo
   for (let i = 0; i < 4; i++) {
     const m = members[i], c = K[m.col], x = 0.3 + i * 3.21, y = 1.14, w = 3.12
     hp(s, x, y, w, 5.86, m.name.toUpperCase(), m.col, 'member' + i)
-    s.addShape(pres.shapes.OVAL, { x: x + w / 2 - 0.5, y: y + 0.5, w: 1.0, h: 1.0, fill: { color: c }, line: { color: 'F2DDBF', width: 3 }, objectName: 'avatar' + i })
-    T(s, m.ini, { x: x + w / 2 - 0.5, y: y + 0.5, w: 1.0, h: 1.0, fontSize: 30, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' })
+    s.addShape(pres.shapes.OVAL, { x: x + w / 2 - 0.55, y: y + 0.45, w: 1.1, h: 1.1, fill: { color: c }, line: { color: 'F2DDBF', width: 2 }, objectName: 'avatar' + i })
+    if (photo(m.ini)) s.addImage({ path: photo(m.ini), x: x + w / 2 - 0.5, y: y + 0.5, w: 1.0, h: 1.0, altText: 'Photo of ' + m.name, objectName: 'photo' + i })
+    else T(s, m.ini, { x: x + w / 2 - 0.5, y: y + 0.5, w: 1.0, h: 1.0, fontSize: 30, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' })
     T(s, [{ text: m.name, options: { bold: true, fontSize: 15, color: c, breakLine: true } }, { text: 'Team Outliers · Constella', options: { fontSize: 10, italic: true, fontFace: 'Georgia', color: K.grey } }], { x: x + 0.1, y: y + 1.55, w: w - 0.2, h: 0.56, align: 'center', valign: 'middle' })
     const wins = WINS[m.name]
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.45, y: y + 2.13, w: w - 0.9, h: 0.33, rectRadius: 0.16, fill: { color: c }, line: { color: c, width: 0 }, objectName: 'wins' + i })
